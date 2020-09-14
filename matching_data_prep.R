@@ -9,7 +9,7 @@ file_path = paste(data_path,
 benefits =
   read_delim(file_path,
              delim = ";",
-             locale = locale(encoding = "latin1"))
+             locale = locale(encoding = "latin1", decimal_mark = ","))
 
 # for each participant (indexed by PST_KEY), only keep most recent (as indicated by STICHTAG) row of raw data
 # and select variables
