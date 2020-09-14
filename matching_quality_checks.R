@@ -24,7 +24,7 @@ participant_assignment_full %>%
         booktabs = TRUE,
         escape = F, 
         linesep = "") %>%
-    write("Data/wave_comparison_ttests.tex")
+    write(paste0(data_out, "wave_comparison_ttests.tex"))
 
 
 

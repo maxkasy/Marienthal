@@ -2,9 +2,15 @@ library(tidyverse)
 library(nbpMatching)
 library(lubridate)
 
+# data path for local data: switch between Max and Lukas
 data_path = "/Users/max/Documents/Jobgarantie/Marienthal_TeilnehmerInnen-Daten/"
+#data_path = "/Users/lukas/Documents/Jobgarantie/Marienthal_TeilnehmerInnen-Daten/"
 
-source("matching_data_prep.R")
+home <- getwd()
+data_out <- paste0(home, "/Data/")
+
+# source script from Dropbox
+source( paste0(home, "/matching_data_prep.R"))
 
 # create and select relevant covariates for matching
 participant_matchingvars = participants %>%
@@ -42,12 +48,12 @@ participant_assignment_full =
 participant_assignment_full %>%
     filter(treatment_wave == 1) %>%
     select(PSTNR) %>%
-    write_csv("Data/TeilnehmerInnen_Welle_1.csv")
+    write_csv( paste0(data_out, "TeilnehmerInnen_Welle_1.csv"))
 
 participant_assignment_full %>%
     filter(treatment_wave == 2) %>%
     select(PSTNR) %>%
-    write_csv("Data/TeilnehmerInnen_Welle_2.csv")
+    write_csv( paste0(data_out,"TeilnehmerInnen_Welle_2.csv"))
 
 
-source("matching_quality_checks.R")
+source(paste0(home, "/matching_quality_checks.R"))
