@@ -3,8 +3,8 @@ library(nbpMatching)
 library(lubridate)
 
 # data path for local data: switch between Max and Lukas
-data_path = "/Users/max/Documents/Jobgarantie/Marienthal_TeilnehmerInnen-Daten/"
-#data_path = "/Users/lukas/Documents/Jobgarantie/Marienthal_TeilnehmerInnen-Daten/"
+data_path = "/Users/max/Documents/Jobgarantie/Marienthal_merged/"
+# data_path = "/Users/lukas/Documents/Jobgarantie/Marienthal_merged/"
 
 home <- getwd()
 data_out <- paste0(home, "/Data/")
@@ -25,7 +25,7 @@ participant_distmatrix = distancematrix(participant_distances)
 participant_match = nonbimatch(participant_distmatrix)
 
 # random treatment assignment
-participant_assignment = assign.grp(participant_match$matches, seed = 1933)
+participant_assignment = assign.grp(participant_match$matches, seed = 1929)
 
 # merge assignment with original covariates
 participant_assignment_full =
