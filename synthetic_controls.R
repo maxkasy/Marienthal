@@ -2,6 +2,22 @@ library(Synth)
 library(tidyverse)
 
 
+# data path for local data: switch between Max and Lukas
+data_path = "/Users/max/Documents/Jobgarantie/Population_noe/"
+# data_path = "/Users/lukas/Documents/Jobgarantie/Population_noe/"
+
+home <- getwd()
+data_out <- paste0(home, "/Data/")
+
+# source script from Dropbox
+source( paste0(home, "/synth_data_prep.R"))
+
+
+# prepare data in synth format
+dataprep(foo = municipalities,
+         unit.variable = c("GKZ"),
+         time.variable = c("year"))
+
 
 
 # The following is reproducing the example by the Synth authors
