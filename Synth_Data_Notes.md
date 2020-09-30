@@ -1,5 +1,47 @@
 # Synth_Data_Notes
 
+## Variable Description
+
+types of variables:
+- **reported**
+- aggregated
+- *computed*
+
+**GKZ** = Gemeindekennzahl
+
+AM = number of unemployed; annual average of number at monthly reference date, 
+    aggregated from:
+    AMS Qualifikation (AQ)
+    Arbeitslos laut HV (AO)
+    sonstige AMS Vormerkung (AS)
+    Arbeitslos (AL)
+BE = number of employed; annual average of number at monthly reference date, 
+aggregated from:
+    Nicht geförderte Unselbstständige (NU)
+    Geförderte Unselbstständige (GU)
+    Selbststänidge (SB)
+    Geringfügige Beschäftigung (BE) - in official definition this would be part of SO (try both)
+SO = number of inactive; annual average of number at monthly reference date, 
+aggregated from:
+    Gesichert Erwerbsfern (GO)
+    Sonstig Erwerbsfern (SE)
+    Tod bzw. keine Daten (UN)
+*UE_rate_U3* = unemployment rate; headline: AM/(BE+AM)
+*UE_rate_tot* = unemployment rate of total working age pop; AM/(BE+AM+SO)
+*EMP_rate_tot* = employment rate; BE/(BE+AM+SO)
+*Inactive_rate_tot* = inactive rate; SO/(BE+AM+SO)
+
+ue_long = number of long term unemployed; annual average of number at monthly reference date
+ue_short = number of short term unemployed; annual average of number at monthly reference date
+*ue_tot* = number of long + short term unemployed
+*ue_short_share* = short term unemployed as a share of all unemployed: ue_short/(ue_long+ue_short)
+*ue_long_share* = long term unemployed as a share of all unemployed:  ue_long/(ue_long+ue_short)
+*ue_short_rate_tot* = short term unemployed as a share of total working age pop: ue_short/(BE+AM+SO)
+*ue_long_rate_tot* = long term unemployed as a share of total working age pop: ue_long/(BE+AM+SO)
+
+*age_mean* = mean age; 2019/12 or 2020/07
+
+
 ## Offene Fragen an AMS
 
 wir wollen auch die interviewen, die raus fallen.
