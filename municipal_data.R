@@ -108,12 +108,23 @@ print(head(data_pop_ue))
 # Pop every status 2011-2015
 data_pop_2015 = read_data_NOE(path_pop, "2011 bis 2015_Bev_erwerbf_Alter_Status_GKZ.dsv")
 
+data_pop_2015 = data_pop_2015 %>% 
+  mutate(STICHTAG = dmy(STICHTAG)) %>% 
+  rename(status = PK_E_L3 ,
+         n = "SUM(XT.REEMPLOYEES)--,COUNT(XT.PENR)ASANZAHL_PERSONEN--REEMPLOYEESBESTAND--*/")
+
 print(head(data_pop_2015))
 
 # Pop every status 2016-2020
 data_pop_2020 = read_data_NOE(path_pop, "2016 bis August 2020_Bev_erwerbf_Alter_Status_GKZ.dsv")
 
-print(head(data_pop_2020))
+data_pop = data_pop_2020 %>% 
+  mutate(STICHTAG = dmy(STICHTAG)) %>% 
+  rename(status = PK_E_L3 ,
+         n = "SUM(XT.REEMPLOYEES)--,COUNT(XT.PENR)ASANZAHL_PERSONEN--REEMPLOYEESBESTAND--*/") %>% 
+  bind_rows(data_pop_2015) # merge datasets
+
+print(head(data_pop))
 
 
 ## Wage (Bemessungsgrundlage)

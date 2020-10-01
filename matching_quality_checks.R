@@ -12,7 +12,7 @@ participant_assignment_full %>%
     names_to = "Covariate") %>%
     mutate(Covariate = factor(Covariate,
         levels = c("MALE","PEALTER","MIG","BILDUNG","EINSCHRAENKUNG","BENEFIT_LEVEL","UE_DAYS"),
-        labels = c("male","age","migration background","education","disability","benefit level","days unemployed"))) %>% 
+        labels = c("Male","Age","Migration Background","Education","Disability","Benefit level","Days unemployed"))) %>% 
     group_by(Covariate) %>%
     rstatix::t_test(value ~ treatment_wave, detailed = T) %>%
     ungroup() %>%

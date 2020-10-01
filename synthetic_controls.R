@@ -1,66 +1,60 @@
 library(Synth)
 library(tidyverse)
 
-
-# data path for local data: switch between Max and Lukas
-data_path = "/Users/max/Documents/Jobgarantie/Population_noe/"
-# data_path = "/Users/lukas/Documents/Jobgarantie/Population_noe/"
-
 home <- getwd()
 data_out <- paste0(home, "/Data/")
 
 # source script from Dropbox
-source( paste0(home, "/synth_data_prep.R"))
+# source( paste0(home, "/synth_data_prep.R"))
+
+municipalities =
+  read_csv(paste(data_out,
+                 "municipalities_merged.csv",
+                 sep = "")) %>% 
+  mutate(GKZ = as.integer(GKZ),
+         year = as.integer(year)) %>%
+  as.data.frame() # for compatibility with synth
 
 
 # prepare data in synth format
-dataprep(foo = municipalities,
-         unit.variable = c("GKZ"),
-         time.variable = c("year"))
+Gramatneusiedl = 30731 # GKZ for treated town
+controls = unique(municipalities$GKZ)
+controls = controls[controls != Gramatneusiedl]
 
 
+municipalities_synth_prepared = municipalities %>%
+  dataprep(
+    unit.variable = "GKZ",
+    unit.names.variable = "GEMEINDE",
+    time.variable = "year",
+    dependent = "UE_rate_tot",
+    predictors = c("POP_workingage"),
+    time.predictors.prior = 2020,
+    special.predictors = list(list("age_mean", 2019, c("mean"))),
+    treatment.identifier = Gramatneusiedl,
+    controls.identifier   = controls,
+    time.optimize.ssr     = 2011:2020
+  )
 
-# The following is reproducing the example by the Synth authors
-data("basque")
+municipalities_synth_out =
+  synth(data.prep.obj = municipalities_synth_prepared)
 
-dataprep.out <-
-    dataprep(
-        foo = basque
-        ,predictors= c("school.illit",
-                       "school.prim",
-                       "school.med",
-                       "school.high",
-                       "school.post.high"
-                       ,"invest"
-        )
-        ,predictors.op = c("mean")
-        ,dependent     = c("gdpcap")
-        ,unit.variable = c("regionno")
-        ,time.variable = c("year")
-        ,special.predictors = list(
-            list("gdpcap",1960:1969,c("mean")),                            
-            list("sec.agriculture",seq(1961,1969,2),c("mean")),
-            list("sec.energy",seq(1961,1969,2),c("mean")),
-            list("sec.industry",seq(1961,1969,2),c("mean")),
-            list("sec.construction",seq(1961,1969,2),c("mean")),
-            list("sec.services.venta",seq(1961,1969,2),c("mean")),
-            list("sec.services.nonventa",seq(1961,1969,2),c("mean")),
-            list("popdens",1969,c("mean")))
-        ,treatment.identifier  = 17
-        ,controls.identifier   = c(2:16,18)
-        ,time.predictors.prior = c(1964:1969)
-        ,time.optimize.ssr     = c(1960:1969)
-        ,unit.names.variable   = c("regionname")
-        ,time.plot            = c(1955:1997) 
-    )
+# checking solution of synth
+gaps_covariates = municipalities_synth_prepared$X0 %*% municipalities_synth_out$solution.w - municipalities_synth_prepared$X1
+
+gaps_outcomes = municipalities_synth_prepared$Z0 %*% municipalities_synth_out$solution.w - municipalities_synth_prepared$Z1
+
+gaps_covariates
+gaps_outcomes
+
+municipalities_synth_tables <-
+  synth.tab(dataprep.res = municipalities_synth_prepared, 
+            synth.res = municipalities_synth_out)
+
+municipalities_synth_tables$tab.w %>% 
+  arrange(desc(w.weights)) %>% 
+  head(n=15)
 
 
-synth.out <- synth(data.prep.obj = dataprep.out, method = "BFGS")
-
-gaps <- dataprep.out$Y1plot - (dataprep.out$Y0plot %*% synth.out$solution.w)
-
-synth.tables <- synth.tab(dataprep.res = dataprep.out, synth.res = synth.out)
-
-
-# implemented by running a for loop to implement placebo tests across all control units
+# TBD: permutation inference, implemented by running a for loop to implement placebo tests across all control units
 # in the sample and collecting information on the gaps.
