@@ -1,3 +1,5 @@
+library(xlsx)
+
 ###### Data preparation for synthetic control
 
 ### 0. merge data sets ---------------------------------
@@ -45,60 +47,60 @@ data_edu_AL = read_delim(
 )
 
 # aggregate edu status
-# ISCED 5-6 = edu_high
-# ISCED 3-4 = edu_middle
-# ISCED 1-2 = edu_low
-# -- = edu_missing
+# ISCED 5-6 = edu_high_AL
+# ISCED 3-4 = edu_middle_AL
+# ISCED 1-2 = edu_low_AL
+# -- = edu_NA_AL
 data_edu_AL <- data_edu_AL %>%
   mutate(
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "AK", "edu_high"),
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "AK", "edu_high_AL"),
     # AK Akademie (ISCED 5+6) = high
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "FB", "edu_high"),
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "FB", "edu_high_AL"),
     # FB Fachhochschule Bakkalaureat (ISCED 5+6) = high
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "FH", "edu_high"),
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "FH", "edu_high_AL"),
     # FH Fachhochschule (ISCED 5+6) = high
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "UB", "edu_high"),
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "UB", "edu_high_AL"),
     # UB Bakkalaureatstudium (ISCED 5+6) = high
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "UV", "edu_high"),
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "UV", "edu_high_AL"),
     # UV Universitaet (ISCED 5+6) = high
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HB", "edu_middle"),
-    # HB Hoehere berufsbildende Schule (ISCED 4) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HK", "edu_middle"),
-    # HK Hoehere kaufmaennische Schule (ISCED 4) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HT", "edu_middle"),
-    # HT Hoehere technische Schule (ISCED 4) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LM", "edu_middle"),
-    # LM Lehre und Meisterpruefung  (ISCED 4) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "H*", "edu_middle"),
-    # H* Hoehere Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HA", "edu_middle"),
-    # HA Allgemeinbildende hoehere Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HS", "edu_middle"),
-    # HS Hoehere sonstige Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "L*", "edu_middle"),
-    # L* Allgemeine Lehrausbildung (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LE", "edu_middle"),
-    # LE Lehre (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LT", "edu_middle"),
-    # LT Teilintegrierte Lehre (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "M*", "edu_middle"),
-    # M* Mittlere Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MB", "edu_middle"),
-    # MB Mittlere berufsbildende Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MK", "edu_middle"),
-    # MK Mittlere kaufmaennische Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MS", "edu_middle"),
-    # MS Sonstige mittlere Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MT", "edu_middle"),
-    # MT Mittlere technische Schule (ISCED 3) = edu_middle
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "PO", "edu_low"),
-    # PO Keine abgeschlossene Pflichtschule (ISCED 2) = edu_low
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "PS", "edu_low"),
-    # PS Pflichtschule (ISCED 2) = edu_low
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "XX", "edu_missing"),
-    # XX Ungeklaert = edu_missing
-    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "--", "edu_missing")
-    # -- Ungeklaert = edu_missing
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HB", "edu_middle_AL"),
+    # HB Hoehere berufsbildende Schule (ISCED 4) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HK", "edu_middle_AL"),
+    # HK Hoehere kaufmaennische Schule (ISCED 4) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HT", "edu_middle_AL"),
+    # HT Hoehere technische Schule (ISCED 4) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LM", "edu_middle_AL"),
+    # LM Lehre und Meisterpruefung  (ISCED 4) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "H*", "edu_middle_AL"),
+    # H* Hoehere Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HA", "edu_middle_AL"),
+    # HA Allgemeinbildende hoehere Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "HS", "edu_middle_AL"),
+    # HS Hoehere sonstige Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "L*", "edu_middle_AL"),
+    # L* Allgemeine Lehrausbildung (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LE", "edu_middle_AL"),
+    # LE Lehre (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "LT", "edu_middle_AL"),
+    # LT Teilintegrierte Lehre (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "M*", "edu_middle_AL"),
+    # M* Mittlere Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MB", "edu_middle_AL"),
+    # MB Mittlere berufsbildende Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MK", "edu_middle_AL"),
+    # MK Mittlere kaufmaennische Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MS", "edu_middle_AL"),
+    # MS Sonstige mittlere Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "MT", "edu_middle_AL"),
+    # MT Mittlere technische Schule (ISCED 3) = edu_middle_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "PO", "edu_low_AL"),
+    # PO Keine abgeschlossene Pflichtschule (ISCED 2) = edu_low_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "PS", "edu_low_AL"),
+    # PS Pflichtschule (ISCED 2) = edu_low_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "XX", "edu_NA_AL"),
+    # XX Ungeklaert = edu_NA_AL
+    AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "--", "edu_NA_AL")
+    # -- Ungeklaert = edu_NA_AL
   )
 
 # sum rows of same category
@@ -113,17 +115,14 @@ edu_AL_wide = data_edu_AL %>%
 # compute rates
 edu_AL_wide = edu_AL_wide %>%
   mutate(
-    edu_high_AL_by_tot_AL = edu_high / (edu_high + edu_middle + edu_low + edu_missing),
-    edu_middle_AL_by_tot_AL = edu_middle / (edu_high + edu_middle + edu_low + edu_missing),
-    edu_low_AL_by_tot_AL = edu_low / (edu_high + edu_middle + edu_low + edu_missing)
-  )
-
-# add year for merging
-edu_AL_wide = edu_AL_wide %>%
+    edu_high_AL_by_tot_AL = edu_high_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL),
+    edu_middle_AL_by_tot_AL = edu_middle_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL),
+    edu_low_AL_by_tot_AL = edu_low_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL)
+  ) %>%
   mutate(year = 2019) %>% # add year for merging
     mutate(year = as.character(year)) # change variable type for merging
 
-### occupation not complete####
+### occupation tbd####
 file_path = paste(data_path, sub_paths_2019_12, files_used[3], sep="")
 
 data_occ_AL = read_delim(
@@ -189,7 +188,9 @@ sex_AL_wide = data_sex_AL %>%
     men_AL_by_tot_AL = M / (M + W) # compute share of male unemployed
   ) %>%
   mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = as.character(year)) %>% # change variable type for merging
+    rename(men_AL = M,
+           women_AL = W)
 
 
 ### migration ####
@@ -204,31 +205,31 @@ data_mig_AL = read_delim(
 # aggregate migration first and second gen
 data_mig_AL = data_mig_AL %>%
   mutate(
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig"),
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig_AL"),
     # "-" no migration background = no_mig
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG1", "mig"),
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG1", "mig_AL"),
     # MIG1 migration background first gen = mig
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG2", "mig")
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG2", "mig_AL")
     # MIG2 migration background second gen = mig
   )
 
 # prep data
 mig_AL_wide = data_mig_AL %>%
   spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
-  mutate(mig = replace_na(mig, 0),
-         no_mig = replace_na(no_mig, 0)) %>% # replace NAs with 0 to allow summarise
+  mutate(mig_AL = replace_na(mig_AL, 0),
+         no_mig_AL = replace_na(no_mig_AL, 0)) %>% # replace NAs with 0 to allow summarise
   group_by(GKZ) %>%
-  summarize(mig = sum(mig), # sum rows of same GKZ to bring observations in same line
-            no_mig = sum(no_mig)
+  summarize(mig_AL = sum(mig_AL), # sum rows of same GKZ to bring observations in same line
+            no_mig_AL = sum(no_mig_AL)
   ) %>%
   mutate(
-    mig_AL_by_tot_AL = mig / (mig + no_mig) # compute share of male unemployed
+    mig_AL_by_tot_AL = mig_AL / (mig_AL + no_mig_AL) # compute share of male unemployed
   ) %>%
   mutate(year = 2019) %>% # add year for merging
   mutate(year = as.character(year)) # change variable type for merging
 
 
-### sector not complete####
+### sector tbd ####
 file_path = paste(data_path, sub_paths_2019_12, files_used[8], sep="")
 
 data_sector_AL = read_delim(
@@ -354,7 +355,7 @@ unbalanced = mean_LZBL_AL %>%
   summarize(n = n()) %>%
   filter(n < 10)
 
-### Tagsatz ####
+### Tagsatz tbd ####
 
 
 ### disability ####
@@ -373,9 +374,9 @@ data_disability_AL = read_delim(
 data_disability_AL = data_disability_AL %>%
   mutate(
     VERMITTLUNGSEINSCHRAENKUNG = as.integer(VERMITTLUNGSEINSCHRAENKUNG != "-"), # job relevant health issues
-    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "0", "no_disability"),
+    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "0", "no_disability_AL"),
     # AK Akademie (ISCED 5+6) = high
-    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "1", "disability")
+    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "1", "disability_AL")
     # FB Fachhochschule Bakkalaureat (ISCED 5+6) = high
     )
 
@@ -385,11 +386,11 @@ disability_AL_wide = data_disability_AL %>%
 
 # sum rows of same category
 disability_AL_wide <- disability_AL_wide %>%
-  mutate(disability = replace_na(disability, 0),
-         no_disability = replace_na(no_disability, 0)) %>%
+  mutate(disability_AL = replace_na(disability_AL, 0),
+         no_disability_AL = replace_na(no_disability_AL, 0)) %>%
   group_by(GKZ, STICHTAG) %>%
-  summarize(disability = sum(disability),
-            no_disability = sum(no_disability)
+  summarize(disability_AL = sum(disability_AL),
+            no_disability_AL = sum(no_disability_AL)
             )
 
 # create annual averages
@@ -398,8 +399,8 @@ disability_AL_wide$year <- disability_AL_wide$STICHTAG %>%
 
 mean_disability_AL_wide <- disability_AL_wide %>%
   group_by(GKZ, year) %>%
-  summarize(disability = mean(disability),
-            no_disability = mean(no_disability))
+  summarize(disability_AL = mean(disability_AL),
+            no_disability_AL = mean(no_disability_AL))
 
 # Link municipalities that changed GKZ over time (2017 reform)
 
@@ -464,7 +465,7 @@ for (i in x) {
 # compute share of ue with disability
 mean_disability_AL_wide = mean_disability_AL_wide %>%
   mutate(
-    ue_disability_by_ue_tot = disability / (disability + no_disability)
+    ue_disability_by_ue_tot = disability_AL / (disability_AL + no_disability_AL)
     # share of unemployed with a disability
   )
 
@@ -575,7 +576,41 @@ data_edu_POP = read_delim(
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
+# aggregate edu status
+# ISCED 5-6 = edu_high_POP
+# ISCED 3-4 = edu_middle_POP
+# ISCED 1-2 = edu_low_POP
+# -- = edu_NA_POP
+data_edu_POP <- data_edu_POP %>%
+  rename(education = GESCHAETZTE_AUSBILDUNG) %>%
+  mutate(
+    education = replace(education, education == "Uni/FH", "edu_high_POP"),
+    education = replace(education, education == "AHS", "edu_middle_POP"),
+    education = replace(education, education == "BHS", "edu_middle_POP"),
+    education = replace(education, education == "BMS", "edu_middle_POP"),
+    education = replace(education, education == "Lehre", "edu_middle_POP"),
+    education = replace(education, education == "Pflichtschule", "edu_low_POP"),
+    education = replace(education, education == "keine Angabe", "edu_NA_POP")
+  )
 
+# sum rows of same category
+  data_edu_POP <- data_edu_POP %>%
+  group_by(GKZ, education) %>%
+  summarize(n = sum(n))
+
+# reshape dataset to wide
+edu_POP_wide = data_edu_POP %>%
+  spread(education, n)
+
+# compute rates
+edu_POP_wide = edu_POP_wide %>%
+  mutate(
+    edu_high_POP_by_tot_POP = edu_high_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP),
+    edu_middle_POP_by_tot_POP = edu_middle_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP),
+    edu_low_POP_by_tot_POP = edu_low_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP)
+  ) %>%
+  mutate(year = 2019) %>% # add year for merging
+  mutate(year = as.character(year)) # change variable type for merging
 
 
 ### sex ####
@@ -600,8 +635,10 @@ sex_POP_wide = data_sex_POP %>%
     men_POP_by_tot_POP = M / (M + F) # compute share of male population
   ) %>%
   mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
-
+  mutate(year = as.character(year)) %>% # change variable type for merging
+    rename(men_POP = M,
+         women_POP = F)
+  
 ### nationality ####
 file_path = paste(file_paths_pop[7], sep = "")
 
@@ -611,7 +648,20 @@ data_nationality_POP = read_delim(
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
-
+# prep data
+nationality_POP_wide = data_nationality_POP %>%
+  spread(INL_AUSL, n) %>% # reshape dataset to wide
+  mutate(Ausländer = replace_na(Ausländer, 0), # replace NAs with 0 to allow summarise
+         Inländer = replace_na(Inländer, 0)) %>%
+  group_by(GKZ) %>%
+  summarize(Ausländer = sum(Ausländer), # sum rows of same GKZ to bring observations in same line
+            Inländer = sum(Inländer)
+  ) %>%
+  mutate(
+    foreign_nationality_POP_by_tot_POP = Ausländer / (Ausländer + Inländer) # compute share of male population
+  ) %>%
+  mutate(year = 2019) %>% # add year for merging
+  mutate(year = as.character(year)) # change variable type for merging
 
 ### migration ####
 file_path = paste(file_paths_pop[9], sep = "")
@@ -622,7 +672,35 @@ data_mig_POP = read_delim(
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
-### sector ####
+# aggregate migration first and second gen
+data_mig_POP = data_mig_POP %>%
+  mutate(
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig_POP"),
+    # "-" no migration background = no_mig
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG1", "mig_POP"),
+    # MIG1 migration background first gen = mig
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG2", "mig_POP")
+    # MIG2 migration background second gen = mig
+  )
+
+# prep data
+mig_POP_wide = data_mig_POP %>%
+  spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
+  mutate(mig = replace_na(mig_POP, 0),
+         no_mig = replace_na(no_mig_POP, 0)) %>% # replace NAs with 0 to allow summarise
+  group_by(GKZ) %>%
+  summarize(mig_POP = sum(mig_POP), # sum rows of same GKZ to bring observations in same line
+            no_mig_POP = sum(no_mig_POP)
+  ) %>%
+  mutate(
+    mig_POP_by_tot_POP = mig_POP / (mig_POP + no_mig_POP) # compute share of male unemployed
+  ) %>%
+  mutate(year = 2019) %>% # add year for merging
+  mutate(year = as.character(year)) # change variable type for merging
+
+
+
+### sector tbd####
 file_path = paste(file_paths_pop[10], sep = "")
 
 data_sector_POP = read_delim(
@@ -632,6 +710,7 @@ data_sector_POP = read_delim(
 )
 
 ### Versorgungspflicht ####
+# indicates whether the person has a care responsibility for a child <15
 file_path = paste(file_paths_pop[12], sep = "")
 
 data_care_POP = read_delim(
@@ -640,6 +719,25 @@ data_care_POP = read_delim(
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
+data_care_POP = data_care_POP %>%
+  mutate(VERSORGUNGSPFLICHT = as.integer(VERSORGUNGSPFLICHT != "-")) # care responsibility for children <15
+
+# prep data
+care_POP_wide = data_care_POP %>%
+  spread(VERSORGUNGSPFLICHT, n) %>% # reshape dataset to wide
+  rename(care_POP = "1",
+         no_care_POP = "<NA>") %>% # rename columns
+  mutate(care_POP = replace_na(care_POP, 0),
+         no_care_POP = replace_na(no_care_POP, 0)) %>% # replace NAs with 0 to allow summarise
+  group_by(GKZ) %>%
+  summarize(care_POP = sum(care_POP), # sum rows of same GKZ to bring observations in same line
+            no_care_POP = sum(no_care_POP)
+  ) %>%
+  mutate(
+    care_POP_by_tot_POP = care_POP / (care_POP + no_care_POP) # compute share of male unemployed
+  ) %>%
+  mutate(year = 2019) %>% # add year for merging
+  mutate(year = as.character(year)) # change variable type for merging
 
 #### Population - longitudinal ####
 read_data_NOE = function(path, filename) {
@@ -753,9 +851,25 @@ unbalanced = pop_status_wide %>%
   filter(n < 10)
 
 
-#### Wages - cross section ####
+#### Wages - cross section tbd ####
+file_paths_wage = paste(data_path, path_pop, "1_UB_Avg_bmg nach GKZ_nach stichtag_20190111_202000531_mit_bestand.xlsx", sep="")
 
+data_wage_POP = read.xlsx(file_paths_wage, 1)
 
+data_wage_POP = data_wage_POP %>%
+  rename(wage_mean = DS_BEITRAGSGRUNDLAGE_INKL_SZ,
+         n = BESTAND)
+
+# create annual averages
+data_wage_POP$year <- data_wage_POP$STICHTAG %>%
+  mutate(STICHTAG = dmy(STICHTAG)) %>%
+  format("%Y")
+
+# create 2 summary variables: 1: mean wage for 2019; 2: mean wage for first 5M 2020
+mean_wage_POP <- data_wage_POP %>%
+  group_by(GKZ, year) %>%
+  summarize(mean_wage = weighted.mean(wage_mean, n)) %>% # weighted average
+  mutate(GKZ = as.numeric(GKZ)) 
 
 #### merge ####
 # with additional covariates for synthetic control
@@ -771,9 +885,16 @@ municipalities =
   left_join(mig_AL_wide, by = c("GKZ", "year")) %>% # migration background AL cross-section
   left_join(mean_disability_AL_wide, by = c("GKZ", "year")) %>%  # disability AL longitudinal
   left_join(mean_age_POP, by = c("GKZ", "year")) %>%  # age POP cross-section  
-  left_join(firmsize_POP_wide, by = c("GKZ", "year")) %>%  # firmsize POP cross-section  
+  left_join(firmsize_POP_wide, by = c("GKZ", "year")) %>%  # firmsize POP cross-section
+  left_join(edu_POP_wide, by = c("GKZ", "year")) %>%  # edu POP cross-section 
   left_join(sex_POP_wide, by = c("GKZ", "year")) %>%  # sex POP cross-section    
-
+  left_join(nationality_POP_wide, by = c("GKZ", "year")) %>%  # nationality POP cross-section   
+  left_join(mig_POP_wide, by = c("GKZ", "year")) %>%  # migration background POP cross-section   
+  left_join(care_POP_wide, by = c("GKZ", "year")) %>%  # care responsibility POP cross-section  
+  left_join(mean_wage_POP, by = c("GKZ", "year"))  # mean wage cross-section for 2019 & 2020
+  
+  
+  
   
 # drop Pop without GKZ (GKZ = 0)
 municipalities <- municipalities %>%
