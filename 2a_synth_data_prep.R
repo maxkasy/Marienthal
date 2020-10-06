@@ -37,6 +37,7 @@ mean_age_AL <- data_age_AL %>%
   mutate(year = 2019) %>% # add year for merging
   mutate(year = as.character(year)) # change variable type for merging
 
+
 ### education ####
 file_path = paste(data_path, sub_paths_2019_12, files_used[2], sep="")
 
@@ -123,13 +124,14 @@ edu_AL_wide = edu_AL_wide %>%
     mutate(year = as.character(year)) # change variable type for merging
 
 ### occupation tbd####
-file_path = paste(data_path, sub_paths_2019_12, files_used[3], sep="")
-
-data_occ_AL = read_delim(
-  file_path, 
-  delim=";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
+# file_path = paste(data_path, sub_paths_2019_12, files_used[3], sep="")
+# 
+# data_occ_AL = read_delim(
+#   file_path, 
+#   delim=";",
+#   locale = locale(encoding = "latin1", decimal_mark = ",")
+# ) %>%
+#   select( -1) # drop first column X1
 
 
 ### German ####
@@ -229,15 +231,35 @@ mig_AL_wide = data_mig_AL %>%
   mutate(year = as.character(year)) # change variable type for merging
 
 
-### sector tbd ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[8], sep="")
+# ### sector tbd ####
+# file_path = paste(data_path, sub_paths_2019_12, files_used[8], sep="")
+# 
+# data_sector_AL = read_delim(
+#   file_path, 
+#   delim=";",
+#   locale = locale(encoding = "latin1", decimal_mark = ",")
+# ) %>%
+# select( -1) # drop first column X1
 
-data_sector_AL = read_delim(
-  file_path, 
-  delim=";",
+
+### Tagsatz ####
+# average 2011-2020 
+file_path = paste(data_path,
+                  path_AL,
+                  "2011-01_bis_2020-08_AL_NOE_TAGSATZ.dsv",
+                  sep = "")
+
+Ubenefit_AL = read_delim(
+  file_path,
+  delim = ";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
+) %>%
+  select( -1) %>% # drop first column X1
+  rename(Ubenefit_daily_mean2011_2020 = TAGSATZ_DURCHSCHNITT) %>%
+  mutate(year = 2019) %>% # add year for merging
+  mutate(year = as.character(year), # change variable type for merging
+         GKZ = as.numeric(GKZ) # change variable type for merging
+         ) 
 
 
 #### Unemployed - longitudinal ####
@@ -355,9 +377,6 @@ unbalanced = mean_LZBL_AL %>%
   summarize(n = n()) %>%
   filter(n < 10)
 
-### Tagsatz tbd ####
-
-
 ### disability ####
 file_path = paste(data_path,
                   path_AL,
@@ -375,9 +394,9 @@ data_disability_AL = data_disability_AL %>%
   mutate(
     VERMITTLUNGSEINSCHRAENKUNG = as.integer(VERMITTLUNGSEINSCHRAENKUNG != "-"), # job relevant health issues
     VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "0", "no_disability_AL"),
-    # AK Akademie (ISCED 5+6) = high
+    # 
     VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "1", "disability_AL")
-    # FB Fachhochschule Bakkalaureat (ISCED 5+6) = high
+    # 
     )
 
 # reshape dataset to wide for LZBL categories (short vs long term ue)
@@ -700,14 +719,15 @@ mig_POP_wide = data_mig_POP %>%
 
 
 
-### sector tbd####
-file_path = paste(file_paths_pop[10], sep = "")
-
-data_sector_POP = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
+# ### sector tbd####
+# file_path = paste(file_paths_pop[10], sep = "")
+# 
+# data_sector_POP = read_delim(
+#   file_path,
+#   delim = ";",
+#   locale = locale(encoding = "latin1", decimal_mark = ",")
+# ) %>%
+# select( -1) # drop first column X1
 
 ### Versorgungspflicht ####
 # indicates whether the person has a care responsibility for a child <15
@@ -851,7 +871,7 @@ unbalanced = pop_status_wide %>%
   filter(n < 10)
 
 
-#### Wages - cross section tbd ####
+#### Wages - cross section  ####
 file_paths_wage = paste(data_path, path_pop, "1_UB_Avg_bmg nach GKZ_nach stichtag_20190111_202000531_mit_bestand.xlsx", sep="")
 
 data_wage_POP = read.xlsx(file_paths_wage, 1)
@@ -861,8 +881,10 @@ data_wage_POP = data_wage_POP %>%
          n = BESTAND)
 
 # create annual averages
+data_wage_POP <- data_wage_POP %>%
+  mutate(STICHTAG = dmy(STICHTAG))
+
 data_wage_POP$year <- data_wage_POP$STICHTAG %>%
-  mutate(STICHTAG = dmy(STICHTAG)) %>%
   format("%Y")
 
 # create 2 summary variables: 1: mean wage for 2019; 2: mean wage for first 5M 2020
@@ -883,6 +905,7 @@ municipalities =
   left_join(german_AL_wide, by = c("GKZ", "year")) %>% # German AL cross-section
   left_join(sex_AL_wide, by = c("GKZ", "year")) %>% # sex AL cross-section
   left_join(mig_AL_wide, by = c("GKZ", "year")) %>% # migration background AL cross-section
+  left_join(Ubenefit_AL, by = c("GKZ", "year")) %>% # unemployment benefit AL cross-section
   left_join(mean_disability_AL_wide, by = c("GKZ", "year")) %>%  # disability AL longitudinal
   left_join(mean_age_POP, by = c("GKZ", "year")) %>%  # age POP cross-section  
   left_join(firmsize_POP_wide, by = c("GKZ", "year")) %>%  # firmsize POP cross-section
