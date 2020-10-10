@@ -30,82 +30,121 @@ includes workingage population
 
 ## cross-section 2019/12 or 2020/07
 
-*age_mean_POP* = mean age
+*age\_mean\_POP* = mean age
 
-- firmsize_large = >249 employees
-- firmsize_middle = 10-249 employees
-- firmsize_small = <10 employees
-- *firmsize_large_POP_by_tot_POP* = firmsize_large / (firmsize_large + firmsize_middle + firmsize_small )
-- *firmsize_middle_POP_by_tot_POP* = firmsize_middle / (firmsize_large + firmsize_middle + firmsize_small )
-- *firmsize_small_POP_by_tot_POP* = firmsize_small / (firmsize_large + firmsize_middle + firmsize_small )
-  
-- edu\_high\_POP = ISCED 5-6
-- edu\_low\_POP = ISCED 1-2
-- edu\_middle\_POP	= ISCED 3-4
-- edu\_NA\_POP = AUSBILDUNG missing; "keine Angabe"
-- *edu_high_POP_by_tot_POP* = edu_high_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP)
-- *edu_middle_POP_by_tot_POP* = edu_middle_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP)
-- *edu_low_POP_by_tot_POP* = edu_low_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP)
+-   firmsize\_large = \>249 employees
 
-- **men\_POP** = men
-- **women\_POP** = women
-- *men\_POP\_by\_tot\_POP* = men\_POP / (men\_POP + women\_POP)
+-   firmsize\_middle = 10-249 employees
 
-- Ausländer = foreign citzenship
-- Inländer = Austrian citzenship
-- *foreign_nationality_POP_by_tot_POP* = Ausländer / (Ausländer + Inländer)
+-   firmsize\_small = \<10 employees
 
-- mig_POP = first (MIG1) or second (MIG2) generation migration background
-- no_mig_POP = no migration background
-- *mig_POP_by_tot_POP* = mig_POP / (mig_POP + no_mig_POP)
+-   *firmsize\_large\_POP\_by\_tot\_POP* = firmsize\_large / (firmsize\_large + firmsize\_middle + firmsize\_small )
 
-care_POP = person with a care responsibility for a child <15
-no_care_POP = person without a care responsibility for a child <15
-- *care_POP_by_tot_POP* = care_POP / (care_POP + no_care_POP)
+-   *firmsize\_middle\_POP\_by\_tot\_POP* = firmsize\_middle / (firmsize\_large + firmsize\_middle + firmsize\_small )
 
-- *mean_wage* =  2019 for 12 months, 2020 for the first first 5 months
+-   *firmsize\_small\_POP\_by\_tot\_POP* = firmsize\_small / (firmsize\_large + firmsize\_middle + firmsize\_small )
+
+-   edu\_high\_POP = ISCED 5-6
+
+-   edu\_low\_POP = ISCED 1-2
+
+-   edu\_middle\_POP = ISCED 3-4
+
+-   edu\_NA\_POP = AUSBILDUNG missing; "keine Angabe"
+
+-   *edu\_high\_POP\_by\_tot\_POP* = edu\_high\_POP / (edu\_high\_POP + edu\_middle\_POP + edu\_low\_POP + edu\_NA\_POP)
+
+-   *edu\_middle\_POP\_by\_tot\_POP* = edu\_middle\_POP / (edu\_high\_POP + edu\_middle\_POP + edu\_low\_POP + edu\_NA\_POP)
+
+-   *edu\_low\_POP\_by\_tot\_POP* = edu\_low\_POP / (edu\_high\_POP + edu\_middle\_POP + edu\_low\_POP + edu\_NA\_POP)
+
+-   **men\_POP** = men
+
+-   **women\_POP** = women
+
+-   *men\_POP\_by\_tot\_POP* = men\_POP / (men\_POP + women\_POP)
+
+-   Ausländer = foreign citzenship
+
+-   Inländer = Austrian citzenship
+
+-   *foreign\_nationality\_POP\_by\_tot\_POP* = Ausländer / (Ausländer + Inländer)
+
+-   mig\_POP = first (MIG1) or second (MIG2) generation migration background
+
+-   no\_mig\_POP = no migration background
+
+-   *mig\_POP\_by\_tot\_POP* = mig\_POP / (mig\_POP + no\_mig\_POP)
+
+-   care\_POP = person with a care responsibility for a child \<15
+
+-   no\_care\_POP = person without a care responsibility for a child \<15
+
+-   *care\_POP\_by\_tot\_POP* = care\_POP / (care\_POP + no\_care\_POP)
+
+-   *mean\_wage* = 2019 for 12 months, 2020 for the first first 5 months
 
 ### AMS data
 
 ## longitudinal
 
-- *ue\_long* = number of long term unemployed; annual average of number at monthly reference date
-- *ue\_short* = number of short term unemployed; annual average of number at monthly reference date
-- *ue\_tot* = number of long + short term unemployed
-- *ue\_short\_by\_ue\_tot* = short term unemployed as a share of all unemployed: ue\_short/(ue\_long+ue\_short)
-- *ue\_long\_by\_ue\_tot* = long term unemployed as a share of all unemployed: ue\_long/(ue\_long+ue\_short)
-- *ue\_short\_by\_pop* = short term unemployed as a share of total working age pop: ue\_short/(BE+AM+SO)
-- *ue\_long\_by\_pop* = long term unemployed as a share of total working age pop: ue\_long/(BE+AM+SO)
+-   ue\_long = number of long term unemployed; annual average of number at monthly reference date
 
-- disability\_AL = any kind of VERMITTLUNGSEINSCHRÄNKUNG recorded (A - Laut AMS,B - Beides (I u. L), I - Begünstigt nach BeinstG u./o. OFG, L- Begünstigt nach LBehG, P - Personen mit Behindertenpass)
-- no\_disability\_AL = no VERMITTLUNGSEINSCHRÄNKUNG recorded
-- *ue\_disability\_by\_ue\_tot* = disability_AL / (disability_AL + no_disability_AL)
+-   ue\_short = number of short term unemployed; annual average of number at monthly reference date
+
+-   ue\_tot = number of long + short term unemployed
+
+-   *ue\_short\_by\_ue\_tot* = short term unemployed as a share of all unemployed: ue\_short/(ue\_long+ue\_short)
+
+-   *ue\_long\_by\_ue\_tot* = long term unemployed as a share of all unemployed: ue\_long/(ue\_long+ue\_short)
+
+-   *ue\_short\_by\_pop* = short term unemployed as a share of total working age pop: ue\_short/(BE+AM+SO)
+
+-   *ue\_long\_by\_pop* = long term unemployed as a share of total working age pop: ue\_long/(BE+AM+SO)
+
+-   disability\_AL = any kind of VERMITTLUNGSEINSCHRÄNKUNG recorded (A - Laut AMS,B - Beides (I u. L), I - Begünstigt nach BeinstG u./o. OFG, L- Begünstigt nach LBehG, P - Personen mit Behindertenpass)
+
+-   no\_disability\_AL = no VERMITTLUNGSEINSCHRÄNKUNG recorded
+
+-   *ue\_disability\_by\_ue\_tot* = disability\_AL / (disability\_AL + no\_disability\_AL)
 
 ## cross-section 2019/12 or 2020/07
 
 -   *age\_mean\_AL* = mean age
 
-- edu\_high\_AL = ISCED 5-6
-- edu\_low\_AL = ISCED 1-2
-- edu\_middle\_AL	= ISCED 3-4
-- edu\_NA\_AL = AUSBILDUNG missing; "XX" or "--"
-- *edu\_high\_AL\_by\_tot\_AL* = edu_high_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL)
-- *edu\_middle\_AL\_by\_tot\_AL* = edu_middle_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL)
-- *edu\_low\_AL\_by\_tot\_AL* = edu_low_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL)
+-   edu\_high\_AL = ISCED 5-6
 
-- *poor\_german*	= <=A2
-- *ok\_german* = >=B1
-- *poor\_german\_AL\_by\_tot\_AL* = poor_german / (ok_german + poor_german)
+-   edu\_low\_AL = ISCED 1-2
 
-- **men\_AL** = men
-- **women\_AL** = women
-- *men\_AL\_by\_tot\_AL* = men\_AL / (men\_AL + women\_AL)
+-   edu\_middle\_AL = ISCED 3-4
 
-- mig_AL = first (MIG1) or second (MIG2) generation migration background
-- no_mig_AL = no migration background
-- *mig_AL_by_tot_AL* = mig_AL / (mig_AL + no_mig_AL)
+-   edu\_NA\_AL = AUSBILDUNG missing; "XX" or "--"
 
-- **Ubenefit_daily_mean2011_2020** = Tagsatz: unemployment benefit level per day as an average for 2011-2020
+-   *edu\_high\_AL\_by\_tot\_AL* = edu\_high\_AL / (edu\_high\_AL + edu\_middle\_AL + edu\_low\_AL + edu\_NA\_AL)
+
+-   *edu\_middle\_AL\_by\_tot\_AL* = edu\_middle\_AL / (edu\_high\_AL + edu\_middle\_AL + edu\_low\_AL + edu\_NA\_AL)
+
+-   *edu\_low\_AL\_by\_tot\_AL* = edu\_low\_AL / (edu\_high\_AL + edu\_middle\_AL + edu\_low\_AL + edu\_NA\_AL)
+
+-   *poor\_german* = \<=A2
+
+-   *ok\_german* = \>=B1
+
+-   *poor\_german\_AL\_by\_tot\_AL* = poor\_german / (ok\_german + poor\_german)
+
+-   **men\_AL** = men
+
+-   **women\_AL** = women
+
+-   *men\_AL\_by\_tot\_AL* = men\_AL / (men\_AL + women\_AL)
+
+-   mig\_AL = first (MIG1) or second (MIG2) generation migration background
+
+-   no\_mig\_AL = no migration background
+
+-   *mig\_AL\_by\_tot\_AL* = mig\_AL / (mig\_AL + no\_mig\_AL)
+
+-   **Ubenefit\_daily\_mean2011\_2020** = Tagsatz: unemployment benefit level per day as an average for 2011-2020
 
 ## To Decide
 

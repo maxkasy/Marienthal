@@ -111,7 +111,12 @@ data_edu_AL <- data_edu_AL %>%
 
 # reshape dataset to wide
 edu_AL_wide = data_edu_AL %>%
-  spread(AUSBILDUNG, n)
+  spread(AUSBILDUNG, n) %>%
+  mutate(edu_NA_AL = replace_na(edu_NA_AL, 0), # replace NAs with 0 to allow summarise
+        edu_low_AL = replace_na(edu_low_AL, 0),
+        edu_middle_AL = replace_na(edu_middle_AL, 0),
+        edu_high_AL = replace_na(edu_high_AL, 0) 
+        )
 
 # compute rates
 edu_AL_wide = edu_AL_wide %>%
@@ -122,6 +127,7 @@ edu_AL_wide = edu_AL_wide %>%
   ) %>%
   mutate(year = 2019) %>% # add year for merging
     mutate(year = as.character(year)) # change variable type for merging
+
 
 ### occupation tbd####
 # file_path = paste(data_path, sub_paths_2019_12, files_used[3], sep="")
@@ -159,7 +165,10 @@ data_german_AL <- data_german_AL %>%
 german_AL_wide = data_german_AL %>%
   spread(DEUTSCH, sum_n) %>%
   rename(ok_german = "TRUE",
-         poor_german = "FALSE" )
+         poor_german = "FALSE" ) %>%
+  mutate(ok_german = replace_na(ok_german, 0), # replace NAs with 0 to allow summarise
+         poor_german = replace_na(poor_german, 0) 
+  )
 
 # compute rates
 german_AL_wide = german_AL_wide %>%
@@ -705,8 +714,8 @@ data_mig_POP = data_mig_POP %>%
 # prep data
 mig_POP_wide = data_mig_POP %>%
   spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
-  mutate(mig = replace_na(mig_POP, 0),
-         no_mig = replace_na(no_mig_POP, 0)) %>% # replace NAs with 0 to allow summarise
+  mutate(mig_POP = replace_na(mig_POP, 0),
+         no_mig_POP = replace_na(no_mig_POP, 0)) %>% # replace NAs with 0 to allow summarise
   group_by(GKZ) %>%
   summarize(mig_POP = sum(mig_POP), # sum rows of same GKZ to bring observations in same line
             no_mig_POP = sum(no_mig_POP)

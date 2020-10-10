@@ -29,3 +29,4 @@ source("2a_synth_data_prep.R")
 
 source("2b_synthetic_controls.R")
 
+source("2c_synth_figures.R")
