@@ -146,6 +146,12 @@ includes workingage population
 
 -   **Ubenefit\_daily\_mean2011\_2020** = Tagsatz: unemployment benefit level per day as an average for 2011-2020
 
+### Statistik Austria tax data
+
+- **communal_tax** = Kommunalsteuer: 3% of gross wage of employee (paid by employer)
+- *communal_tax_by_pop* = communal_tax / POP_workingage
+
+
 ## To Decide
 
 -   Do we use the pre-corona data from December 2019, or latest data from July 2020? (try with both or use both if no limit to variables) ausprobieren

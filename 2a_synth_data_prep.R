@@ -902,6 +902,41 @@ mean_wage_POP <- data_wage_POP %>%
   summarize(mean_wage = weighted.mean(wage_mean, n)) %>% # weighted average
   mutate(GKZ = as.numeric(GKZ)) 
 
+
+### communal tax ####
+file_path = paste(data_path, "20-597_STATcube_Kommunalsteuer_NÖ-Gem_j00-19.csv", sep = "")
+
+data_communal_tax = read_csv(file_path)
+
+# data_communal_tax = read_csv(file_path, strings_)
+# tt <-read.csv(file_path, stringsAsFactors = F)
+
+# data_communal_tax = read.csv( file = file_path ,
+#          encoding="UTF-8")
+
+# reshape dataset to long
+data_tax_long = data_communal_tax %>%
+  gather(key = year, value = communal_tax, -GEMEINDE)
+
+# fix special characters for separate
+# -> for now fixed in source csv
+# data_communal_tax = iconv(data_communal_tax$GEMEINDE, "UTF-8" , "latin1")
+
+# seperate GEMEINDE & GKZ
+data_tax_long_sep = data_tax_long %>%
+  separate(GEMEINDE, sep="<", into=c("GEMEINDE", "GKZ"))
+
+# remove >
+data_tax_long_sep = data_tax_long_sep %>%
+  separate(GKZ, sep=">", into=c("GKZ", "GKZ2")) %>%
+     select(-"GKZ2", - "GEMEINDE") %>%
+        mutate(GKZ = as.numeric(GKZ),
+               communal_tax = as.numeric(communal_tax)
+               ) # change variable type for merging
+
+# substr(data_tax_long_sep$GKZ, stop, last )
+
+
 #### merge ####
 # with additional covariates for synthetic control
 
@@ -923,9 +958,9 @@ municipalities =
   left_join(nationality_POP_wide, by = c("GKZ", "year")) %>%  # nationality POP cross-section   
   left_join(mig_POP_wide, by = c("GKZ", "year")) %>%  # migration background POP cross-section   
   left_join(care_POP_wide, by = c("GKZ", "year")) %>%  # care responsibility POP cross-section  
-  left_join(mean_wage_POP, by = c("GKZ", "year"))  # mean wage cross-section for 2019 & 2020
-  
-  
+  left_join(mean_wage_POP, by = c("GKZ", "year")) %>% # mean wage cross-section for 2019 & 2020
+  left_join(data_tax_long_sep, by = c("GKZ", "year")) # communal tax
+
   
   
 # drop Pop without GKZ (GKZ = 0)
@@ -935,7 +970,8 @@ municipalities <- municipalities %>%
 # compute rates for long & short UE
 municipalities = municipalities %>%
   mutate(ue_long_by_pop = ue_long / (BE + AM + SO),
-         ue_short_by_pop = ue_short / (BE + AM + SO))
+         ue_short_by_pop = ue_short / (BE + AM + SO),
+         communal_tax_by_pop = communal_tax / POP_workingage)
 
 
 # export
