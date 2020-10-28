@@ -5,18 +5,19 @@ library(tidyverse)
 municipalities =
   read_csv("Data/municipalities_merged.csv")
 
+
+# Define relevant variables to be used for matching and synthetic control ------
 # Restrict sample to subset of municipalities that are close to Gramatneusiedl
 Gramatneusiedl = 30731 # GKZ for treated town
-
-
 
 # Sample selection:
 # Constructing Mahalanobis distance to Gramatneusiedl
 # filtering based on this distance
 matching_variables = c(
-  "UE_rate_tot", # this is the outcome variable for synthetic control.
-  "ue_long_by_pop", 
+  #"EMP_rate_tot",  # this is the outcome variable for synthetic control.
+  "UE_rate_tot",
   "POP_workingage",
+  "ue_long_by_pop",
   "Inactive_rate_tot",
   "age_mean_POP",
   "firmsize_small_POP_by_tot_POP",
@@ -33,13 +34,34 @@ matching_variables = c(
   "poor_german_AL_by_tot_AL",
   "men_AL_by_tot_AL",
   "mig_AL_by_tot_AL",
-  # "Ubenefit_daily_mean2011_2020 ",
-  "ue_disability_by_ue_tot"
+  "ue_disability_by_ue_tot",
+  "communal_tax_by_pop"
 )
 
+# Additional matching variables for 2020
+# List is in the format used by the synth package
+matching_variables_2020 = list(
+  list("ue_long_by_pop", 2020, "mean"),
+  list("Inactive_rate_tot", 2020, "mean"),
+  list("mean_wage", 2020, "mean"),
+  list("age_mean_AL", 2020, "mean"),
+  list("edu_low_AL_by_tot_AL", 2020, "mean"),
+  list("edu_middle_AL_by_tot_AL", 2020, "mean"),
+  list("poor_german_AL_by_tot_AL", 2020, "mean"),
+  list("ue_disability_by_ue_tot", 2020, "mean")
+)
 
-
-# NOTE: INCLUDE 2020 MEAN WAGE AS SPECIAL PREDICTOR? SEPARATE MATCHING VARIABLE
+# names of these additional matching variables for use in later tables
+matching_variables_2020_names = paste("special",
+                                      c("ue_long_by_pop",
+                                        "Inactive_rate_tot",
+                                        "mean_wage",
+                                        "age_mean_AL",
+                                        "edu_low_AL_by_tot_AL",
+                                        "edu_middle_AL_by_tot_AL",
+                                        "poor_german_AL_by_tot_AL",
+                                        "ue_disability_by_ue_tot"), 
+                                      "2020", sep=".")
 
 Gramatneusiedl_matching_variables =
   municipalities[municipalities$GKZ == Gramatneusiedl &
@@ -54,7 +76,7 @@ municipalities_matrix =  municipalities_matching_variables %>%
   select(-GKZ) %>%
   as.matrix()
 
-# Create Mahalanobis distance to Gramatneusiedl
+# Create Mahalanobis distance to Gramatneusiedl -----
 municipalities_matching_variables = municipalities_matching_variables %>%
   mutate(
     distance_to_Gramatneusiedl =
@@ -64,12 +86,9 @@ municipalities_matching_variables = municipalities_matching_variables %>%
   )
 
 # Filtering based on distance
-municipalities_matching_variables = municipalities_matching_variables %>% 
-  filter(distance_to_Gramatneusiedl < 
-           quantile(distance_to_Gramatneusiedl,.1))
-
-
-
+municipalities_matching_variables = municipalities_matching_variables %>%
+  filter(distance_to_Gramatneusiedl <
+           quantile(distance_to_Gramatneusiedl, .05))
 
 # convert data for compatibility to synth function
 municipalities = municipalities %>%
@@ -80,7 +99,7 @@ municipalities = municipalities %>%
 
 all_identifiers = unique(municipalities$GKZ)
 
-# function to construct synthetic control for municipality identified by GKZ
+# function to construct synthetic control for municipality identified by GKZ -----
 municipalities_synth = function(GKZ) {
   control_municipalities = all_identifiers[all_identifiers != GKZ]
   
@@ -93,7 +112,7 @@ municipalities_synth = function(GKZ) {
       predictors = matching_variables[-1],
       # Use all matching variables as predictors, except the outcome in component 1
       time.predictors.prior = 2019,
-      # special.predictors = list(list("age_mean_AL", 2019, c("mean"))),
+      special.predictors = matching_variables_2020,
       treatment.identifier = GKZ,
       controls.identifier   = control_municipalities,
       time.optimize.ssr     = 2011:2020
@@ -110,14 +129,12 @@ municipalities_synth_Gramatneusiedl =
   municipalities_synth(Gramatneusiedl)
 
 
-
-
-# Running synth for all municipalities, for permutation inference
-# WARNING: this takes a long time!
-plan(multiprocess) # initializing parallel processing
-
-# Run municipalities_synth() for all municipalities in selected sample
-municipalities_synth_all =
-  future_map(all_identifiers, municipalities_synth)
-
-
+if (T){
+  # Running synth for all municipalities, for permutation inference
+  # WARNING: this takes a long time!
+  plan(multiprocess) # initializing parallel processing
+  
+  # Run municipalities_synth() for all municipalities in selected sample
+  municipalities_synth_all =
+    future_map(all_identifiers, municipalities_synth)
+}
