@@ -22,27 +22,51 @@ files_used = c(
   "AL_NOE_VERMITTLUNGSEINSCHRAENKUNG.dsv"
 )
 
+
+# loop over AL cross-section variables
+length(files_used)
+year_vec <- 2019:2020
+
+path_list <- list(sub_paths_2019_12 , sub_paths_2020_07)
+names_list <- list( "2019" , "2020" )
+
+mean_age_AL_list <- list()
+edu_AL_list <- list()
+german_AL_list <- list()
+sex_AL_list <- list()
+mig_AL_list <- list()
+
+file_path <- list()
+
+for( y in 1:length(path_list)) {
+  
 ### age ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[1], sep = "")
-
-data_age_AL = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
-mean_age_AL <- data_age_AL %>%
-  group_by(GKZ) %>%
-  summarize(age_mean_AL = weighted.mean(ALTER, n)) %>% # weighted average
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  file_path[[y]] = paste(data_path,  path_list[[y]], files_used[1], sep = "")
+  names(file_path)[y] <- names_list[[y]]
+  
+  data_age_AL_tmp = read_delim(
+    file_path[[y]],
+    delim = ";",
+    locale = locale(encoding = "latin1", decimal_mark = ",")
+  )
+  
+  mean_age_AL_tmp <- data_age_AL_tmp %>%
+    group_by(GKZ) %>%
+    summarize(age_mean_AL = weighted.mean(ALTER, n)) %>% # weighted average
+    mutate(year = names_list[[y]] %>%  # add year for merging
+             as.character()) # change variable type for merging
+  
+  mean_age_AL_list[[y]] <-
+    mean_age_AL_tmp
+  names(mean_age_AL_list)[y] <- names_list[[y]]
 
 
 ### education ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[2], sep="")
+  file_path[[y]] = paste(data_path,  path_list[[y]], files_used[2], sep = "")
+  names(file_path)[y] <- names_list[[y]]
 
-data_edu_AL = read_delim(
-  file_path, 
+data_edu_AL_tmp = read_delim(
+  file_path[[y]], 
   delim=";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
@@ -52,7 +76,7 @@ data_edu_AL = read_delim(
 # ISCED 3-4 = edu_middle_AL
 # ISCED 1-2 = edu_low_AL
 # -- = edu_NA_AL
-data_edu_AL <- data_edu_AL %>%
+data_edu_AL_tmp <- data_edu_AL_tmp %>%
   mutate(
     AUSBILDUNG = replace(AUSBILDUNG, AUSBILDUNG == "AK", "edu_high_AL"),
     # AK Akademie (ISCED 5+6) = high
@@ -105,12 +129,12 @@ data_edu_AL <- data_edu_AL %>%
   )
 
 # sum rows of same category
-data_edu_AL <- data_edu_AL %>%
+data_edu_AL_tmp <- data_edu_AL_tmp %>%
   group_by(GKZ, AUSBILDUNG) %>%
   summarize(n = sum(n))
 
 # reshape dataset to wide
-edu_AL_wide = data_edu_AL %>%
+edu_AL_wide_tmp = data_edu_AL_tmp %>%
   spread(AUSBILDUNG, n) %>%
   mutate(edu_NA_AL = replace_na(edu_NA_AL, 0), # replace NAs with 0 to allow summarise
         edu_low_AL = replace_na(edu_low_AL, 0),
@@ -119,14 +143,19 @@ edu_AL_wide = data_edu_AL %>%
         )
 
 # compute rates
-edu_AL_wide = edu_AL_wide %>%
+edu_AL_wide_tmp = edu_AL_wide_tmp %>%
   mutate(
     edu_high_AL_by_tot_AL = edu_high_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL),
     edu_middle_AL_by_tot_AL = edu_middle_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL),
     edu_low_AL_by_tot_AL = edu_low_AL / (edu_high_AL + edu_middle_AL + edu_low_AL + edu_NA_AL)
   ) %>%
-  mutate(year = 2019) %>% # add year for merging
-    mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+        as.character()) # change variable type for merging
+
+edu_AL_list[[y]] <-
+  edu_AL_wide_tmp
+names(edu_AL_list)[y] <- names_list[[y]]
+
 
 
 ### occupation tbd####
@@ -141,28 +170,29 @@ edu_AL_wide = edu_AL_wide %>%
 
 
 ### German ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[4], sep="")
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used[4], sep = "")
+names(file_path)[y] <- names_list[[y]]
 
-data_german_AL = read_delim(
-  file_path, 
+data_german_AL_tmp = read_delim(
+  file_path[[y]], 
   delim=";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
 
 # aggregate German by >A or no info
-data_german_AL <- data_german_AL %>%
+data_german_AL_tmp <- data_german_AL_tmp %>%
   group_by(GKZ) %>%
   mutate(DEUTSCH = as.integer((DEUTSCH != "K") & (DEUTSCH != "A")
          & (DEUTSCH != "A1")) & (DEUTSCH != "A2"), # more than A or no info
   )        %>%
   group_by(GKZ, DEUTSCH) %>%
   summarize(sum_n = sum(n)) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) # change variable type for merging
 
 # reshape dataset to wide
-german_AL_wide = data_german_AL %>%
+german_AL_wide_tmp = data_german_AL_tmp %>%
   spread(DEUTSCH, sum_n) %>%
   rename(ok_german = "TRUE",
          poor_german = "FALSE" ) %>%
@@ -171,23 +201,27 @@ german_AL_wide = data_german_AL %>%
   )
 
 # compute rates
-german_AL_wide = german_AL_wide %>%
+german_AL_wide_tmp = german_AL_wide_tmp %>%
   mutate(
     poor_german_AL_by_tot_AL = poor_german / (ok_german + poor_german)
     ) 
 
+german_AL_list[[y]] <-
+  german_AL_wide_tmp
+names(german_AL_list)[y] <- names_list[[y]]
 
 ### sex ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[5], sep="")
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used[5], sep = "")
+names(file_path)[y] <- names_list[[y]]
 
-data_sex_AL = read_delim(
-  file_path, 
+data_sex_AL_tmp = read_delim(
+  file_path[[y]], 
   delim=";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 ) 
 
 # prep data
-sex_AL_wide = data_sex_AL %>%
+sex_AL_wide_tmp = data_sex_AL_tmp %>%
   spread(GESCHLECHT, n) %>% # reshape dataset to wide
   mutate(M = replace_na(M, 0), # replace NAs with 0 to allow summarise
          W = replace_na(W, 0)) %>%
@@ -198,23 +232,29 @@ sex_AL_wide = data_sex_AL %>%
   mutate(
     men_AL_by_tot_AL = M / (M + W) # compute share of male unemployed
   ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) %>% # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) %>% # change variable type for merging
     rename(men_AL = M,
            women_AL = W)
 
+sex_AL_list[[y]] <-
+  sex_AL_wide_tmp
+names(sex_AL_list)[y] <- names_list[[y]]
+
+
 
 ### migration ####
-file_path = paste(data_path, sub_paths_2019_12, files_used[7], sep="")
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used[7], sep = "")
+names(file_path)[y] <- names_list[[y]]
 
-data_mig_AL = read_delim(
-  file_path, 
+data_mig_AL_tmp = read_delim(
+  file_path[[y]], 
   delim=";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
 # aggregate migration first and second gen
-data_mig_AL = data_mig_AL %>%
+data_mig_AL_tmp = data_mig_AL_tmp %>%
   mutate(
     MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig_AL"),
     # "-" no migration background = no_mig
@@ -225,7 +265,7 @@ data_mig_AL = data_mig_AL %>%
   )
 
 # prep data
-mig_AL_wide = data_mig_AL %>%
+mig_AL_wide_tmp = data_mig_AL_tmp %>%
   spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
   mutate(mig_AL = replace_na(mig_AL, 0),
          no_mig_AL = replace_na(no_mig_AL, 0)) %>% # replace NAs with 0 to allow summarise
@@ -236,9 +276,12 @@ mig_AL_wide = data_mig_AL %>%
   mutate(
     mig_AL_by_tot_AL = mig_AL / (mig_AL + no_mig_AL) # compute share of male unemployed
   ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) # change variable type for merging
 
+mig_AL_list[[y]] <-
+  mig_AL_wide_tmp
+names(mig_AL_list)[y] <- names_list[[y]]
 
 # ### sector tbd ####
 # file_path = paste(data_path, sub_paths_2019_12, files_used[8], sep="")
@@ -249,6 +292,27 @@ mig_AL_wide = data_mig_AL %>%
 #   locale = locale(encoding = "latin1", decimal_mark = ",")
 # ) %>%
 # select( -1) # drop first column X1
+
+
+}
+
+
+## Bind 2019 and 2020 data into 1 file
+
+mig_AL =
+  do.call(rbind, mig_AL_list)
+
+sex_AL =
+  do.call(rbind, sex_AL_list)
+
+german_AL =
+  do.call(rbind, german_AL_list)
+
+edu_AL =
+  do.call(rbind, edu_AL_list)
+
+mean_age_AL =
+  do.call(rbind, mean_age_AL_list)
 
 
 ### Tagsatz ####
@@ -506,11 +570,11 @@ unbalanced = mean_disability_AL_wide %>%
 
 #### Population - cross section ####
 sub_paths_pop = c(
-  "Bevölkerung/2019-12_BEVOELKERUNG/2019-12_",
-  "Bevölkerung/2020-07_BEVOELKERUNG/2020-07_"
+  "Bevoelkerung/2019-12_BEVOELKERUNG/2019-12_",
+  "Bevoelkerung/2020-07_BEVOELKERUNG/2020-07_"
 )
 
-path_pop = "Bevölkerung/"
+path_pop = "Bevoelkerung/"
 
 files_used_pop = c(
   "BEVOELKERUNG_NOE_ALTER.dsv",
@@ -527,28 +591,55 @@ files_used_pop = c(
   "BEVOELKERUNG_NOE_VERSORGUNGSPFLICHT.dsv"
 )
 
+# used for cross-section files not included in loop (education)
 file_paths_pop = paste(data_path, sub_paths_pop, files_used_pop, sep = "")
 
-### age ####
-file_path = paste(file_paths_pop[1], sep = "")
+# loop over POP cross-section variables
+length(files_used)
+year_vec <- 2019:2020
 
-data_age_POP = read_delim(
-  file_path,
+path_list <- list(sub_paths_pop[1] , sub_paths_pop[2])
+names_list <- list( "2019" , "2020" )
+
+mean_age_POP_list <- list()
+firmsize_POP_list <- list()
+sex_POP_list <- list()
+nationality_POP_list <- list()
+mig_POP_list <- list()
+care_POP_list <- list()
+
+file_path <- list()
+
+for( y in 1:length(path_list)) {
+
+### age ####
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[1], sep = "")
+  names(file_path)[y] <- names_list[[y]]
+
+data_age_POP_tmp = read_delim(
+  file_path[[y]],
   delim = ";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
-mean_age_POP <- data_age_POP %>%
+mean_age_POP_tmp <- data_age_POP_tmp %>%
   group_by(GKZ) %>%
   summarize(age_mean_POP = weighted.mean(ALTER, n)) %>% # weighted average
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) # change variable type for merging
+
+mean_age_POP_list[[y]] <-
+  mean_age_POP_tmp
+names(mean_age_POP_tmp)[y] <- names_list[[y]]
+
+
 
 ### firmsize ####
-file_path = paste(file_paths_pop[2], sep = "")
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[2], sep = "")
+names(file_path)[y] <- names_list[[y]]
 
-data_firmsize_POP = read_delim(
-  file_path,
+data_firmsize_POP_tmp = read_delim(
+  file_path[[y]],
   delim = ";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
@@ -558,7 +649,7 @@ data_firmsize_POP = read_delim(
 # 10 - 249 employees = firmsize_middle
 # < 10 employees = firmsize_small
 # keine Angabe = firmsize_NA
-data_firmsize_POP <- data_firmsize_POP %>%
+data_firmsize_POP_tmp <- data_firmsize_POP_tmp %>%
 rename(firmsize = DIENSTGEBERGROESSE_UNTERNEHMEN) %>%
   mutate(
     firmsize = replace(firmsize, firmsize == "> 1000 DN", "firmsize_large"),
@@ -576,26 +667,207 @@ rename(firmsize = DIENSTGEBERGROESSE_UNTERNEHMEN) %>%
 )
 
 # sum rows of same category
-data_firmsize_POP <- data_firmsize_POP %>%
+data_firmsize_POP_tmp <- data_firmsize_POP_tmp %>%
   group_by(GKZ, firmsize) %>%
   summarize(n = sum(n))
 
 # reshape dataset to wide
-firmsize_POP_wide = data_firmsize_POP %>%
+firmsize_POP_wide_tmp = data_firmsize_POP_tmp %>%
   spread(firmsize, n)
 
 # compute rates
-firmsize_POP_wide = firmsize_POP_wide %>%
+firmsize_POP_wide_tmp = firmsize_POP_wide_tmp %>%
   mutate(
     firmsize_large_POP_by_tot_POP = firmsize_large / (firmsize_large + firmsize_middle + firmsize_small ),
     firmsize_middle_POP_by_tot_POP = firmsize_middle / (firmsize_large + firmsize_middle + firmsize_small ),
     firmsize_small_POP_by_tot_POP = firmsize_small / (firmsize_large + firmsize_middle + firmsize_small )
   ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) %>% # change variable type for merging
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) %>% # change variable type for merging
   select(-firmsize_NA) # drop firmsize_NA as those constitute most likely the inactive and unemployed
 
+firmsize_POP_list[[y]] <-
+  firmsize_POP_wide_tmp
+names(firmsize_POP_list)[y] <- names_list[[y]]
+
+
+
+
+### sex ####
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[6], sep = "")
+names(file_path)[y] <- names_list[[y]]
+
+data_sex_POP_tmp = read_delim(
+  file_path[[y]],
+  delim = ";",
+  locale = locale(encoding = "latin1", decimal_mark = ",")
+)
+
+# prep data
+sex_POP_wide_tmp = data_sex_POP_tmp %>%
+  spread(GESCHLECHT, n) %>% # reshape dataset to wide
+  mutate(M = replace_na(M, 0), # replace NAs with 0 to allow summarise
+         F = replace_na(F, 0)) %>%
+  group_by(GKZ) %>%
+  summarize(M = sum(M), # sum rows of same GKZ to bring observations in same line
+            F = sum(F)
+  ) %>%
+  mutate(
+    men_POP_by_tot_POP = M / (M + F) # compute share of male population
+  ) %>%
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) %>% # change variable type for merging
+    rename(men_POP = M,
+         women_POP = F)
+ 
+sex_POP_list[[y]] <-
+  sex_POP_wide_tmp
+names(sex_POP_list)[y] <- names_list[[y]]
+
+
+### nationality ####
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[7], sep = "")
+names(file_path)[y] <- names_list[[y]]
+
+data_nationality_POP_tmp = read_delim(
+  file_path[[y]],
+  delim = ";",
+  locale = locale(encoding = "latin1", decimal_mark = ",")
+)
+
+# prep data
+nationality_POP_wide_tmp = data_nationality_POP_tmp %>%
+  spread(INL_AUSL, n) %>% # reshape dataset to wide
+  mutate(foreign_nationalitiy = replace_na(Ausländer, 0), # replace NAs with 0 to allow summarise
+         AUT_nationality = replace_na(Inländer, 0)) %>%
+  group_by(GKZ) %>%
+  summarize(foreign_nationalitiy = sum(foreign_nationalitiy), # sum rows of same GKZ to bring observations in same line
+            AUT_nationality = sum(AUT_nationality)
+  ) %>%
+  mutate(
+    foreign_nationality_POP_by_tot_POP = foreign_nationalitiy / (foreign_nationalitiy + AUT_nationality) # compute share of foreign nationality
+  ) %>%
+  mutate(year = names_list[[y]] %>% # add year for merging
+        as.character()) # change variable type for merging
+
+nationality_POP_list[[y]] <-
+  nationality_POP_wide_tmp
+names(nationality_POP_list)[y] <- names_list[[y]]
+
+
+### migration ####
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[9], sep = "")
+names(file_path)[y] <- names_list[[y]]
+
+data_mig_POP_tmp = read_delim(
+  file_path[[y]],
+  delim = ";",
+  locale = locale(encoding = "latin1", decimal_mark = ",")
+)
+
+# aggregate migration first and second gen
+data_mig_POP_tmp = data_mig_POP_tmp %>%
+  mutate(
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig_POP"),
+    # "-" no migration background = no_mig
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG1", "mig_POP"),
+    # MIG1 migration background first gen = mig
+    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG2", "mig_POP")
+    # MIG2 migration background second gen = mig
+  )
+
+# prep data
+mig_POP_wide_tmp = data_mig_POP_tmp %>%
+  spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
+  mutate(mig_POP = replace_na(mig_POP, 0),
+         no_mig_POP = replace_na(no_mig_POP, 0)) %>% # replace NAs with 0 to allow summarise
+  group_by(GKZ) %>%
+  summarize(mig_POP = sum(mig_POP), # sum rows of same GKZ to bring observations in same line
+            no_mig_POP = sum(no_mig_POP)
+  ) %>%
+  mutate(
+    mig_POP_by_tot_POP = mig_POP / (mig_POP + no_mig_POP) # compute share of male unemployed
+  ) %>%
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) # change variable type for merging
+
+mig_POP_list[[y]] <-
+  mig_POP_wide_tmp
+names(mig_POP_list)[y] <- names_list[[y]]
+
+# ### sector tbd####
+# file_path = paste(file_paths_pop[10], sep = "")
+# 
+# data_sector_POP = read_delim(
+#   file_path,
+#   delim = ";",
+#   locale = locale(encoding = "latin1", decimal_mark = ",")
+# ) %>%
+# select( -1) # drop first column X1
+
+### Versorgungspflicht ####
+# indicates whether the person has a care responsibility for a child <15
+file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[12], sep = "")
+names(file_path)[y] <- names_list[[y]]
+
+data_care_POP_tmp = read_delim(
+  file_path[[y]],
+  delim = ";",
+  locale = locale(encoding = "latin1", decimal_mark = ",")
+)
+
+data_care_POP_tmp = data_care_POP_tmp %>%
+  mutate(VERSORGUNGSPFLICHT = as.integer(VERSORGUNGSPFLICHT != "-")) # care responsibility for children <15
+
+# prep data
+care_POP_wide_tmp = data_care_POP_tmp %>%
+  spread(VERSORGUNGSPFLICHT, n) %>% # reshape dataset to wide
+  rename(care_POP = "1",
+         no_care_POP = "<NA>") %>% # rename columns
+  mutate(care_POP = replace_na(care_POP, 0),
+         no_care_POP = replace_na(no_care_POP, 0)) %>% # replace NAs with 0 to allow summarise
+  group_by(GKZ) %>%
+  summarize(care_POP = sum(care_POP), # sum rows of same GKZ to bring observations in same line
+            no_care_POP = sum(no_care_POP)
+  ) %>%
+  mutate(
+    care_POP_by_tot_POP = care_POP / (care_POP + no_care_POP) # compute share of male unemployed
+  ) %>%
+  mutate(year = names_list[[y]] %>% # add year for merging
+         as.character()) # change variable type for merging
+
+care_POP_list[[y]] <-
+  care_POP_wide_tmp
+names(care_POP_list)[y] <- names_list[[y]]
+
+
+}
+
+## Bind 2019 and 2020 data into 1 file
+
+care_POP =
+  do.call(rbind, care_POP_list)
+
+mig_POP = 
+  do.call(rbind, mig_POP_list)
+
+mig_POP = 
+  do.call(rbind, mig_POP_list)
+
+nationality_POP = 
+  do.call(rbind, nationality_POP_list)
+
+sex_POP =
+  do.call(rbind, sex_POP_list)
+
+firmsize_POP =
+  do.call(rbind, firmsize_POP_list)
+
+mean_age_POP =
+  do.call(rbind, mean_age_POP_list)
+
 ### education ####
+# excluded of loop because 2020 file contains only "keine Angabe" for education
 file_path = paste(file_paths_pop[5], sep = "")
 
 data_edu_POP = read_delim(
@@ -622,7 +894,7 @@ data_edu_POP <- data_edu_POP %>%
   )
 
 # sum rows of same category
-  data_edu_POP <- data_edu_POP %>%
+data_edu_POP <- data_edu_POP %>%
   group_by(GKZ, education) %>%
   summarize(n = sum(n))
 
@@ -637,136 +909,8 @@ edu_POP_wide = edu_POP_wide %>%
     edu_middle_POP_by_tot_POP = edu_middle_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP),
     edu_low_POP_by_tot_POP = edu_low_POP / (edu_high_POP + edu_middle_POP + edu_low_POP + edu_NA_POP)
   ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
-
-
-### sex ####
-file_path = paste(file_paths_pop[6], sep = "")
-
-data_sex_POP = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
-# prep data
-sex_POP_wide = data_sex_POP %>%
-  spread(GESCHLECHT, n) %>% # reshape dataset to wide
-  mutate(M = replace_na(M, 0), # replace NAs with 0 to allow summarise
-         F = replace_na(F, 0)) %>%
-  group_by(GKZ) %>%
-  summarize(M = sum(M), # sum rows of same GKZ to bring observations in same line
-            F = sum(F)
-  ) %>%
-  mutate(
-    men_POP_by_tot_POP = M / (M + F) # compute share of male population
-  ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) %>% # change variable type for merging
-    rename(men_POP = M,
-         women_POP = F)
-  
-### nationality ####
-file_path = paste(file_paths_pop[7], sep = "")
-
-data_nationality_POP = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
-# prep data
-nationality_POP_wide = data_nationality_POP %>%
-  spread(INL_AUSL, n) %>% # reshape dataset to wide
-  mutate(Ausländer = replace_na(Ausländer, 0), # replace NAs with 0 to allow summarise
-         Inländer = replace_na(Inländer, 0)) %>%
-  group_by(GKZ) %>%
-  summarize(Ausländer = sum(Ausländer), # sum rows of same GKZ to bring observations in same line
-            Inländer = sum(Inländer)
-  ) %>%
-  mutate(
-    foreign_nationality_POP_by_tot_POP = Ausländer / (Ausländer + Inländer) # compute share of male population
-  ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
-
-### migration ####
-file_path = paste(file_paths_pop[9], sep = "")
-
-data_mig_POP = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
-# aggregate migration first and second gen
-data_mig_POP = data_mig_POP %>%
-  mutate(
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "-", "no_mig_POP"),
-    # "-" no migration background = no_mig
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG1", "mig_POP"),
-    # MIG1 migration background first gen = mig
-    MIGRATIONSHINTERGRUND = replace(MIGRATIONSHINTERGRUND, MIGRATIONSHINTERGRUND == "MIG2", "mig_POP")
-    # MIG2 migration background second gen = mig
-  )
-
-# prep data
-mig_POP_wide = data_mig_POP %>%
-  spread(MIGRATIONSHINTERGRUND, n) %>% # reshape dataset to wide
-  mutate(mig_POP = replace_na(mig_POP, 0),
-         no_mig_POP = replace_na(no_mig_POP, 0)) %>% # replace NAs with 0 to allow summarise
-  group_by(GKZ) %>%
-  summarize(mig_POP = sum(mig_POP), # sum rows of same GKZ to bring observations in same line
-            no_mig_POP = sum(no_mig_POP)
-  ) %>%
-  mutate(
-    mig_POP_by_tot_POP = mig_POP / (mig_POP + no_mig_POP) # compute share of male unemployed
-  ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
-
-
-
-# ### sector tbd####
-# file_path = paste(file_paths_pop[10], sep = "")
-# 
-# data_sector_POP = read_delim(
-#   file_path,
-#   delim = ";",
-#   locale = locale(encoding = "latin1", decimal_mark = ",")
-# ) %>%
-# select( -1) # drop first column X1
-
-### Versorgungspflicht ####
-# indicates whether the person has a care responsibility for a child <15
-file_path = paste(file_paths_pop[12], sep = "")
-
-data_care_POP = read_delim(
-  file_path,
-  delim = ";",
-  locale = locale(encoding = "latin1", decimal_mark = ",")
-)
-
-data_care_POP = data_care_POP %>%
-  mutate(VERSORGUNGSPFLICHT = as.integer(VERSORGUNGSPFLICHT != "-")) # care responsibility for children <15
-
-# prep data
-care_POP_wide = data_care_POP %>%
-  spread(VERSORGUNGSPFLICHT, n) %>% # reshape dataset to wide
-  rename(care_POP = "1",
-         no_care_POP = "<NA>") %>% # rename columns
-  mutate(care_POP = replace_na(care_POP, 0),
-         no_care_POP = replace_na(no_care_POP, 0)) %>% # replace NAs with 0 to allow summarise
-  group_by(GKZ) %>%
-  summarize(care_POP = sum(care_POP), # sum rows of same GKZ to bring observations in same line
-            no_care_POP = sum(no_care_POP)
-  ) %>%
-  mutate(
-    care_POP_by_tot_POP = care_POP / (care_POP + no_care_POP) # compute share of male unemployed
-  ) %>%
-  mutate(year = 2019) %>% # add year for merging
-  mutate(year = as.character(year)) # change variable type for merging
+  mutate(year = 2019 %>% # add year for merging
+           as.character()) # change variable type for merging
 
 #### Population - longitudinal ####
 read_data_NOE = function(path, filename) {
@@ -904,7 +1048,7 @@ mean_wage_POP <- data_wage_POP %>%
 
 
 ### communal tax ####
-file_path = paste(data_path, "20-597_STATcube_Kommunalsteuer_NÖ-Gem_j00-19.csv", sep = "")
+file_path = paste(data_path, "20-597_STATcube_Kommunalsteuer_NOE-Gem_j00-19.csv", sep = "")
 
 data_communal_tax = read_csv(file_path)
 
@@ -936,28 +1080,29 @@ data_tax_long_sep = data_tax_long_sep %>%
 
 # substr(data_tax_long_sep$GKZ, stop, last )
 
-
 #### merge ####
 # with additional covariates for synthetic control
+
+
 
 municipalities =
   pop_status_wide %>%  # LM status longitudinal
   group_by(GKZ, year) %>%
   left_join(mean_LZBL_AL, by = c("GKZ", "year")) %>% # long & short term UE longitudinal
   left_join(mean_age_AL, by = c("GKZ", "year")) %>% # age AL cross-section
-  left_join(edu_AL_wide, by = c("GKZ", "year")) %>% # edu AL cross-section
-  left_join(german_AL_wide, by = c("GKZ", "year")) %>% # German AL cross-section
-  left_join(sex_AL_wide, by = c("GKZ", "year")) %>% # sex AL cross-section
-  left_join(mig_AL_wide, by = c("GKZ", "year")) %>% # migration background AL cross-section
+  left_join(edu_AL, by = c("GKZ", "year")) %>% # edu AL cross-section
+  left_join(german_AL, by = c("GKZ", "year")) %>% # German AL cross-section
+  left_join(sex_AL, by = c("GKZ", "year")) %>% # sex AL cross-section
+  left_join(mig_AL, by = c("GKZ", "year")) %>% # migration background AL cross-section
   left_join(Ubenefit_AL, by = c("GKZ", "year")) %>% # unemployment benefit AL cross-section
   left_join(mean_disability_AL_wide, by = c("GKZ", "year")) %>%  # disability AL longitudinal
   left_join(mean_age_POP, by = c("GKZ", "year")) %>%  # age POP cross-section  
-  left_join(firmsize_POP_wide, by = c("GKZ", "year")) %>%  # firmsize POP cross-section
+  left_join(firmsize_POP, by = c("GKZ", "year")) %>%  # firmsize POP cross-section
   left_join(edu_POP_wide, by = c("GKZ", "year")) %>%  # edu POP cross-section 
-  left_join(sex_POP_wide, by = c("GKZ", "year")) %>%  # sex POP cross-section    
-  left_join(nationality_POP_wide, by = c("GKZ", "year")) %>%  # nationality POP cross-section   
-  left_join(mig_POP_wide, by = c("GKZ", "year")) %>%  # migration background POP cross-section   
-  left_join(care_POP_wide, by = c("GKZ", "year")) %>%  # care responsibility POP cross-section  
+  left_join(sex_POP, by = c("GKZ", "year")) %>%  # sex POP cross-section    
+  left_join(nationality_POP, by = c("GKZ", "year")) %>%  # nationality POP cross-section   
+  left_join(mig_POP, by = c("GKZ", "year")) %>%  # migration background POP cross-section   
+  left_join(care_POP, by = c("GKZ", "year")) %>%  # care responsibility POP cross-section  
   left_join(mean_wage_POP, by = c("GKZ", "year")) %>% # mean wage cross-section for 2019 & 2020
   left_join(data_tax_long_sep, by = c("GKZ", "year")) # communal tax
 
