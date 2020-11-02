@@ -1,3 +1,4 @@
+# Construction of a synthetic control for Gramatneusiedl
 library(Synth) # for synthetic control method
 library(furrr) # for parallelizing permutation inference
 library(tidyverse)
@@ -34,7 +35,7 @@ matching_variables = c(
   "poor_german_AL_by_tot_AL",
   "men_AL_by_tot_AL",
   "mig_AL_by_tot_AL",
-  "ue_disability_by_ue_tot",
+  "ue_health_condition_by_ue_tot",
   "communal_tax_by_pop"
 )
 
@@ -48,7 +49,7 @@ matching_variables_2020 = list(
   list("edu_low_AL_by_tot_AL", 2020, "mean"),
   list("edu_middle_AL_by_tot_AL", 2020, "mean"),
   list("poor_german_AL_by_tot_AL", 2020, "mean"),
-  list("ue_disability_by_ue_tot", 2020, "mean")
+  list("ue_health_condition_by_ue_tot", 2020, "mean")
 )
 
 # names of these additional matching variables for use in later tables
@@ -60,7 +61,7 @@ matching_variables_2020_names = paste("special",
                                         "edu_low_AL_by_tot_AL",
                                         "edu_middle_AL_by_tot_AL",
                                         "poor_german_AL_by_tot_AL",
-                                        "ue_disability_by_ue_tot"), 
+                                        "ue_health_condition_by_ue_tot"), 
                                       "2020", sep=".")
 
 Gramatneusiedl_matching_variables =
@@ -131,7 +132,7 @@ municipalities_synth_Gramatneusiedl =
 
 if (T){
   # Running synth for all municipalities, for permutation inference
-  # WARNING: this takes a long time!
+  # WARNING: this takes some time!
   plan(multiprocess) # initializing parallel processing
   
   # Run municipalities_synth() for all municipalities in selected sample

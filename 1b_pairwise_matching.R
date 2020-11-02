@@ -1,3 +1,4 @@
+# Finding pairwise matches and constructing the treatment assignment
 library(nbpMatching)
 
 participants = read_csv(paste(data_path,
@@ -53,4 +54,3 @@ participant_assignment_full %>%
   filter(treatment_wave == 2) %>%
   select(PSTNR) %>%
   write_csv(paste0(data_out, "TeilnehmerInnen_Welle_2.csv"))
-

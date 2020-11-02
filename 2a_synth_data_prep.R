@@ -2,9 +2,7 @@ library(xlsx)
 
 ###### Data preparation for synthetic control
 
-### 0. merge data sets ---------------------------------
-
-#### Unemployed - cross-section ####
+#### 1) Unemployed - cross-section ####
 sub_paths_2019_12 = "AL/2019-12_AL_NOE/2019-12_"
 sub_paths_2020_07 = "AL/2020-07_AL_NOE/2020-07_"
 path_AL = "AL/"
@@ -180,7 +178,7 @@ data_german_AL_tmp = read_delim(
 )
 
 
-# aggregate German by >A or no info
+# aggregate German by >A or no limitation (NA)
 data_german_AL_tmp <- data_german_AL_tmp %>%
   group_by(GKZ) %>%
   mutate(DEUTSCH = as.integer((DEUTSCH != "K") & (DEUTSCH != "A")
@@ -315,8 +313,8 @@ mean_age_AL =
   do.call(rbind, mean_age_AL_list)
 
 
-### Tagsatz ####
-# average 2011-2020 
+### unemployment benefits ####
+# average 2011-2020 "Tagsatz"
 file_path = paste(data_path,
                   path_AL,
                   "2011-01_bis_2020-08_AL_NOE_TAGSATZ.dsv",
@@ -335,7 +333,7 @@ Ubenefit_AL = read_delim(
          ) 
 
 
-#### Unemployed - longitudinal ####
+#### 2) Unemployed - longitudinal ####
 ### long term unemployed (LZBL) ####
 file_path = paste(data_path,
                   path_AL,
@@ -364,7 +362,6 @@ data_LZBL_AL = data_LZBL_AL %>%
          ue_short = replace_na(N, 0))
 
 # create annual averages
-# alternative way using openair package: timeAverage(data_LZBL_AL, avg.time = "year")
 data_LZBL_AL$year <- data_LZBL_AL$STICHTAG %>%
   format("%Y")
 
@@ -374,7 +371,6 @@ mean_LZBL_AL <- data_LZBL_AL %>%
             ue_short = mean(ue_short))
 
 # Link municipalities that changed GKZ over time (2017 reform)
-
 oldGKZ <-
   c(
     32401,
@@ -427,7 +423,7 @@ newGKZ <-
     32144
   )
 
-x <- c(1:22)
+x <- c(1:length(oldGKZ)) 
 
 for (i in x) {
   mean_LZBL_AL$GKZ[which(mean_LZBL_AL$GKZ == oldGKZ[i])] <- newGKZ[i]
@@ -450,49 +446,47 @@ unbalanced = mean_LZBL_AL %>%
   summarize(n = n()) %>%
   filter(n < 10)
 
-### disability ####
+### health condition ####
 file_path = paste(data_path,
                   path_AL,
                   "2011-01_bis_2020-08_AL_NOE_VERMITTLUNGSEINSCHRAENKUNG.dsv",
                   sep = "")
 
-data_disability_AL = read_delim(
+data_health_AL = read_delim(
   file_path,
   delim = ";",
   locale = locale(encoding = "latin1", decimal_mark = ",")
 )
 
-# aggregate disability status
-data_disability_AL = data_disability_AL %>%
+# aggregate health status
+data_health_AL = data_health_AL %>%
   mutate(
     VERMITTLUNGSEINSCHRAENKUNG = as.integer(VERMITTLUNGSEINSCHRAENKUNG != "-"), # job relevant health issues
-    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "0", "no_disability_AL"),
-    # 
-    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "1", "disability_AL")
-    # 
+    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "0", "health_condition_AL"),
+    VERMITTLUNGSEINSCHRAENKUNG = replace(VERMITTLUNGSEINSCHRAENKUNG, VERMITTLUNGSEINSCHRAENKUNG == "1", "healthy_AL")
     )
 
 # reshape dataset to wide for LZBL categories (short vs long term ue)
-disability_AL_wide = data_disability_AL %>%
+health_AL_wide = data_health_AL %>%
   spread(VERMITTLUNGSEINSCHRAENKUNG, n)
 
 # sum rows of same category
-disability_AL_wide <- disability_AL_wide %>%
-  mutate(disability_AL = replace_na(disability_AL, 0),
-         no_disability_AL = replace_na(no_disability_AL, 0)) %>%
+health_AL_wide <- health_AL_wide %>%
+  mutate(health_condition_AL = replace_na(health_condition_AL, 0),
+         healthy_AL = replace_na(healthy_AL, 0)) %>%
   group_by(GKZ, STICHTAG) %>%
-  summarize(disability_AL = sum(disability_AL),
-            no_disability_AL = sum(no_disability_AL)
+  summarize(health_condition_AL = sum(health_condition_AL),
+            healthy_AL = sum(healthy_AL)
             )
 
 # create annual averages
-disability_AL_wide$year <- disability_AL_wide$STICHTAG %>%
+health_AL_wide$year <- health_AL_wide$STICHTAG %>%
   format("%Y")
 
-mean_disability_AL_wide <- disability_AL_wide %>%
+mean_health_AL_wide <- health_AL_wide %>%
   group_by(GKZ, year) %>%
-  summarize(disability_AL = mean(disability_AL),
-            no_disability_AL = mean(no_disability_AL))
+  summarize(health_condition_AL = mean(health_condition_AL),
+            healthy_AL = mean(healthy_AL))
 
 # Link municipalities that changed GKZ over time (2017 reform)
 
@@ -548,27 +542,27 @@ newGKZ <-
     32144
   )
 
-x <- c(1:22)
+x <- c(1:length(oldGKZ))
 
 for (i in x) {
-  mean_disability_AL_wide$GKZ[which(mean_disability_AL_wide$GKZ == oldGKZ[i])] <- newGKZ[i]
+  mean_health_AL_wide$GKZ[which(mean_health_AL_wide$GKZ == oldGKZ[i])] <- newGKZ[i]
 }
 
-# compute share of ue with disability
-mean_disability_AL_wide = mean_disability_AL_wide %>%
+# compute share of ue with a health condition
+mean_health_AL_wide = mean_health_AL_wide %>%
   mutate(
-    ue_disability_by_ue_tot = disability_AL / (disability_AL + no_disability_AL)
-    # share of unemployed with a disability
+    ue_health_condition_by_ue_tot = health_condition_AL / (health_condition_AL + healthy_AL)
+    # share of unemployed with a health condition
   )
 
 # test for balanced panel - remaining GKZ have less than 10 observations
-unbalanced = mean_disability_AL_wide %>%
+unbalanced = mean_health_AL_wide %>%
   group_by(GKZ) %>%
   summarize(n = n()) %>%
   filter(n < 10)
 
 
-#### Population - cross section ####
+#### 3) Population - cross section ####
 sub_paths_pop = c(
   "Bevoelkerung/2019-12_BEVOELKERUNG/2019-12_",
   "Bevoelkerung/2020-07_BEVOELKERUNG/2020-07_"
@@ -591,7 +585,7 @@ files_used_pop = c(
   "BEVOELKERUNG_NOE_VERSORGUNGSPFLICHT.dsv"
 )
 
-# used for cross-section files not included in loop (education)
+# path for cross-section files not included in loop (education)
 file_paths_pop = paste(data_path, sub_paths_pop, files_used_pop, sep = "")
 
 # loop over POP cross-section variables
@@ -653,17 +647,11 @@ data_firmsize_POP_tmp <- data_firmsize_POP_tmp %>%
 rename(firmsize = DIENSTGEBERGROESSE_UNTERNEHMEN) %>%
   mutate(
     firmsize = replace(firmsize, firmsize == "> 1000 DN", "firmsize_large"),
-    # AK Akademie (ISCED 5+6) = high
     firmsize = replace(firmsize, firmsize == "250 bis 999 DN", "firmsize_large"),
-    # FB Fachhochschule Bakkalaureat (ISCED 5+6) = high
     firmsize = replace(firmsize, firmsize == "50 bis 249 DN", "firmsize_middle"),
-    # FH Fachhochschule (ISCED 5+6) = high
     firmsize = replace(firmsize, firmsize == "10 bis 49 DN", "firmsize_middle"),
-    # UB Bakkalaureatstudium (ISCED 5+6) = high
     firmsize = replace(firmsize, firmsize == "bis 9 DN", "firmsize_small"),
-    # UV Universitaet (ISCED 5+6) = high
     firmsize = replace(firmsize, firmsize == "keine Angabe", "firmsize_NA")
-    # UV Universitaet (ISCED 5+6) = high
 )
 
 # sum rows of same category
@@ -684,13 +672,11 @@ firmsize_POP_wide_tmp = firmsize_POP_wide_tmp %>%
   ) %>%
   mutate(year = names_list[[y]] %>% # add year for merging
          as.character()) %>% # change variable type for merging
-  select(-firmsize_NA) # drop firmsize_NA as those constitute most likely the inactive and unemployed
+  select(-firmsize_NA) # drop firmsize_NA as those are the inactive and unemployed
 
 firmsize_POP_list[[y]] <-
   firmsize_POP_wide_tmp
 names(firmsize_POP_list)[y] <- names_list[[y]]
-
-
 
 
 ### sex ####
@@ -705,20 +691,21 @@ data_sex_POP_tmp = read_delim(
 
 # prep data
 sex_POP_wide_tmp = data_sex_POP_tmp %>%
+  mutate(GESCHLECHT = replace(GESCHLECHT, GESCHLECHT == "F", "W")) %>% # rename F to W to avoid logical operator
   spread(GESCHLECHT, n) %>% # reshape dataset to wide
   mutate(M = replace_na(M, 0), # replace NAs with 0 to allow summarise
-         F = replace_na(F, 0)) %>%
+         W = replace_na(W, 0)) %>%
   group_by(GKZ) %>%
   summarize(M = sum(M), # sum rows of same GKZ to bring observations in same line
-            F = sum(F)
+            W = sum(W)
   ) %>%
   mutate(
-    men_POP_by_tot_POP = M / (M + F) # compute share of male population
+    men_POP_by_tot_POP = M / (M + W) # compute share of male population
   ) %>%
   mutate(year = names_list[[y]] %>% # add year for merging
          as.character()) %>% # change variable type for merging
     rename(men_POP = M,
-         women_POP = F)
+         women_POP = W)
  
 sex_POP_list[[y]] <-
   sex_POP_wide_tmp
@@ -805,8 +792,8 @@ names(mig_POP_list)[y] <- names_list[[y]]
 # ) %>%
 # select( -1) # drop first column X1
 
-### Versorgungspflicht ####
-# indicates whether the person has a care responsibility for a child <15
+### care responsibility ####
+# indicates whether the person has a care responsibility for a child <15 "Versorgungspflicht"
 file_path[[y]] = paste(data_path,  path_list[[y]], files_used_pop[12], sep = "")
 names(file_path)[y] <- names_list[[y]]
 
@@ -912,14 +899,14 @@ edu_POP_wide = edu_POP_wide %>%
   mutate(year = 2019 %>% # add year for merging
            as.character()) # change variable type for merging
 
-#### Population - longitudinal ####
+#### 4) Population - longitudinal ####
 read_data_NOE = function(path, filename) {
   paste(data_path, path_pop, filename, sep = "") %>%
     read_delim(delim = ";",
                locale = locale(encoding = "latin1", decimal_mark = ","))
 }
 
-### LM status ####
+### labor market status ####
 
 ### Pop every status 2011-2015
 
@@ -951,10 +938,6 @@ pop_status_annual <- data_pop %>%
 
 # aggregate status
 
-## Entscheiden?
-# Geringfügige Beschäftigung = Beschäftigung oder Sonstige; Nach AMS = Sonstige
-# Sonstige Erwerbsferne Person als Sonstige oder As Inaktiv? Betrifft mitversicherte Partnerin, aber auch mitversichertes Kind und sich in Ausbildung Befindliche
-
 pop_status_annual <- pop_status_annual %>%
   mutate(
     status = replace(status, status == "AQ", "AM"),
@@ -966,18 +949,19 @@ pop_status_annual <- pop_status_annual %>%
     status = replace(status, status == "AL", "AM"),
     # Arbeitslos = AMS Vormerkung
     status = replace(status, status == "NU", "BE"),
-    # Nicht geförderte Unselbstständige = Beschäftigte
+    # Nicht gefÃ¶rderte UnselbststÃ¤ndige = BeschÃ¤ftigte
     status = replace(status, status == "GU", "BE"),
-    # Geförderte Unselbstständige = Beschäftigte
+    # GefÃ¶rderte UnselbststÃ¤ndige = BeschÃ¤ftigte
     status = replace(status, status == "SB", "BE"),
-    # Selbststänidge = Beschäftigte
+    # SelbststÃ¤nidge = BeschÃ¤ftigte
     status = replace(status, status == "GE", "SO"),
     # Gesichert Erwerbsfern = Sonstige
     status = replace(status, status == "GB", "BE"),
-    # Geringfügige Beschäftigung = Beschäftigung; Nach AMS = Sonstige
+    # GeringfÃ¼gige BeschÃ¤ftigung = BeschÃ¤ftigung
     status = replace(status, status == "SE", "SO"),
     # Sonstig erwerbsfern = Sonstige
-    status = replace(status, status == "UN", "SO") # Tod bzw. keine Daten = Sonstige
+    status = replace(status, status == "UN", "SO") 
+    # Tod bzw. keine Daten = Sonstige
   )
 
 # sum rows of same category
@@ -988,10 +972,6 @@ pop_status_annual <- pop_status_annual %>%
 # reshape dataset to wide
 pop_status_wide = pop_status_annual %>%
   spread(status, status_n)
-
-# replace N/A with 0 to create a balanced panel
-# pop_status_wide = pop_status_wide %>%
-#   mutate(status = replace_na(AM, 0))
 
 
 # only 5 tiny municipalities have NAs for AM & BE in 2011/12 (Bergland, Weinburg, Hofamt Priel)
@@ -1024,7 +1004,7 @@ unbalanced = pop_status_wide %>%
   filter(n < 10)
 
 
-#### Wages - cross section  ####
+#### 5) Wages - cross section  ####
 file_paths_wage = paste(data_path, path_pop, "1_UB_Avg_bmg nach GKZ_nach stichtag_20190111_202000531_mit_bestand.xlsx", sep="")
 
 data_wage_POP = read.xlsx(file_paths_wage, 1)
@@ -1040,31 +1020,21 @@ data_wage_POP <- data_wage_POP %>%
 data_wage_POP$year <- data_wage_POP$STICHTAG %>%
   format("%Y")
 
-# create 2 summary variables: 1: mean wage for 2019; 2: mean wage for first 5M 2020
+# create 2 summary variables: 1: mean wage for 2019; 2: mean wage for first 5 months 2020
 mean_wage_POP <- data_wage_POP %>%
   group_by(GKZ, year) %>%
   summarize(mean_wage = weighted.mean(wage_mean, n)) %>% # weighted average
   mutate(GKZ = as.numeric(GKZ)) 
 
 
-### communal tax ####
+### 6) Communal tax ####
 file_path = paste(data_path, "20-597_STATcube_Kommunalsteuer_NOE-Gem_j00-19.csv", sep = "")
 
 data_communal_tax = read_csv(file_path)
 
-# data_communal_tax = read_csv(file_path, strings_)
-# tt <-read.csv(file_path, stringsAsFactors = F)
-
-# data_communal_tax = read.csv( file = file_path ,
-#          encoding="UTF-8")
-
 # reshape dataset to long
 data_tax_long = data_communal_tax %>%
   gather(key = year, value = communal_tax, -GEMEINDE)
-
-# fix special characters for separate
-# -> for now fixed in source csv
-# data_communal_tax = iconv(data_communal_tax$GEMEINDE, "UTF-8" , "latin1")
 
 # seperate GEMEINDE & GKZ
 data_tax_long_sep = data_tax_long %>%
@@ -1075,16 +1045,10 @@ data_tax_long_sep = data_tax_long_sep %>%
   separate(GKZ, sep=">", into=c("GKZ", "GKZ2")) %>%
      select(-"GKZ2", - "GEMEINDE") %>%
         mutate(GKZ = as.numeric(GKZ),
-               communal_tax = as.numeric(communal_tax)
-               ) # change variable type for merging
+               communal_tax = as.numeric(communal_tax) # change variable type for merging
+               ) 
 
-# substr(data_tax_long_sep$GKZ, stop, last )
-
-#### merge ####
-# with additional covariates for synthetic control
-
-
-
+#### 7) Merge ####
 municipalities =
   pop_status_wide %>%  # LM status longitudinal
   group_by(GKZ, year) %>%
@@ -1095,7 +1059,7 @@ municipalities =
   left_join(sex_AL, by = c("GKZ", "year")) %>% # sex AL cross-section
   left_join(mig_AL, by = c("GKZ", "year")) %>% # migration background AL cross-section
   left_join(Ubenefit_AL, by = c("GKZ", "year")) %>% # unemployment benefit AL cross-section
-  left_join(mean_disability_AL_wide, by = c("GKZ", "year")) %>%  # disability AL longitudinal
+  left_join(mean_health_AL_wide, by = c("GKZ", "year")) %>%  # health AL longitudinal
   left_join(mean_age_POP, by = c("GKZ", "year")) %>%  # age POP cross-section  
   left_join(firmsize_POP, by = c("GKZ", "year")) %>%  # firmsize POP cross-section
   left_join(edu_POP_wide, by = c("GKZ", "year")) %>%  # edu POP cross-section 

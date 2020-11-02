@@ -1,7 +1,7 @@
+# Tables and plots for evaluating the synthetic control
 library(kableExtra) # for table export
 
 variable_names = c(
-  # "Unemp/pop",
   "Working age pop",
   "Long term unemp/pop",
   "Inactive/pop",
@@ -60,12 +60,16 @@ check_synth = function(ms) {
       synth.res = ms$municipalities_synth_out
     )
   
+  # Select municipalities with non-negligible weight in  the synthetic control,
+  # sort them by weight.
   non_zero_weights = sum(ms$municipalities_synth_out$solution.w > .005)
   
   non_zero_municipalities = municipalities_synth_tables$tab.w %>%
     arrange(desc(w.weights)) %>%
     head(n = non_zero_weights)
   
+  # Print a table of municipalities used in the synthetic control,
+  # sorted by weight.
   non_zero_municipalities %>%
     kable(
       col.names = c("Weight", "Municipality", "Identifier"),
@@ -80,10 +84,18 @@ check_synth = function(ms) {
   
   
   # Build and print table of variables for control municipalities
+  # First row: Gramatneusied
   Gramatneusiedl_variables = t(ms$municipalities_synth_prepared$X1)  %>%
     as_tibble() %>%
     mutate(GEMEINDE = "Gramatneusiedl")
   
+  # Second row: Synthetic control
+  synthetic_variables = t(ms$municipalities_synth_prepared$X0 %*%
+                            ms$municipalities_synth_out$solution.w) %>%
+    as_tibble() %>%
+    mutate(GEMEINDE = "Synthetic control")
+  
+  # Remaining rows: Municipalities with non-negligible weights
   control_variables = t(ms$municipalities_synth_prepared$X0) %>%
     as_tibble(rownames = "unit.numbers") %>%
     mutate(unit.numbers = as.integer(unit.numbers)) %>%
@@ -91,12 +103,7 @@ check_synth = function(ms) {
     select(-c("w.weights", "unit.numbers")) %>%
     rename(GEMEINDE = unit.names)
   
-  # Insert synthetic control values for comparison
-  synthetic_variables = t(ms$municipalities_synth_prepared$X0 %*%
-                            ms$municipalities_synth_out$solution.w) %>%
-    as_tibble() %>%
-    mutate(GEMEINDE = "Synthetic control")
-  
+  # Combine the rows into one table
   table_variables = bind_rows(Gramatneusiedl_variables,
                               synthetic_variables,
                               control_variables) %>%
@@ -106,9 +113,9 @@ check_synth = function(ms) {
     select(c("GEMEINDE", matching_variables[-1], matching_variables_2020_names))
   
   # Rename columns for printing
-  names(table_variables) = c("Gemeinde", variable_names)
+  names(table_variables) = c("Municipality", variable_names)
   
-  # Split into sub-tables for page width reasons
+  # Split into sub-tables by columns for page width reasons
   sub_tables = list(1:8, c(1, 9:15), c(1, 16:22), c(1, 23:29)) %>%
     map(~ table_variables[, .x])
   
@@ -152,10 +159,11 @@ check_synth = function(ms) {
 }
 
 
+# Print tables for Gramatneusiedl and it's controls
 check_synth(municipalities_synth_Gramatneusiedl)
 
 
-
+# Function to plot the gap between actual and counterfactual unemployment over time
 plot_gap = function(ms) {
   year = ms$municipalities_synth_prepared$tag$time.plot %>%
     lubridate::ymd(truncated = 2L)
@@ -192,6 +200,7 @@ plot_gap = function(ms) {
   
 }
 
+# Plot the predictive gap for Gramatneusiedl
 ggsave(
   "Data/Synthetic_control_gap.png",
   plot_gap(municipalities_synth_Gramatneusiedl),
@@ -200,7 +209,8 @@ ggsave(
 )
 
 
-
+# Visual permutation inference, comparing the trajectory of predictive gaps
+# between Gramatneusiedl and the 25 potential control municipalities
 plot_permutation_trajectories = function(GKZ) {
   all_gaps =
     map(

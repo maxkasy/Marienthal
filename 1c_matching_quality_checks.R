@@ -1,3 +1,4 @@
+# Tables and plots for evaluating the pairwise randomization of treatment
 library(kableExtra) # for table export
 library(broom) # for tidying tables
 library(patchwork) # for creating compound plots

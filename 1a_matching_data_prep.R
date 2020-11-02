@@ -10,7 +10,7 @@ files_used = c("Leistungsbezug_TeilnehmerInnen.dsv",
                "Arbeitsmarktstatus_mon_uni_status_int_TeilnehmerInnen.dsv",
                "Arbeitslose_TeilnehmerInnen.dsv")
 
-persons_dropped = c(1920209, 76914426)
+persons_dropped = c(1920209, 76914426) # not eligible for job guarantee
 
 for (filename in files_used[1:2]) {
   data_1 = paste(data_path, path_1, filename, sep = "") %>% 
@@ -117,7 +117,7 @@ participants =
     MIG = as.integer((MIGRATIONSHINTERGRUND != "-")),
     MALE = as.integer(GESCHLECHT == "M"),
     BILDUNG = as.integer((AUSBILDUNG != "PS") & (AUSBILDUNG != "PO")), # more than Pflichtschule
-    EINSCHRAENKUNG = as.integer(VERMITTLUNGSEINSCHRAENKUNG != "-") # job relevant health issues
+    EINSCHRAENKUNG = as.integer(VERMITTLUNGSEINSCHRAENKUNG != "-") # employment relevant health condition
   ) %>%
   left_join(participants_benefits, by = "PSTNR") %>%  # merge with additional covariates for matching
   left_join(participants_work_history, by = "PSTNR")
